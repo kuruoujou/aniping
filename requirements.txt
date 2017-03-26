@@ -1,0 +1,5 @@
+requests==2.13.0
+feedparser==5.2.1
+Flask==0.12
+flask_apscheduler==1.7.0
+PyYAML==3.12

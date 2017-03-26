@@ -1,0 +1,25 @@
+{% extends 'layout.html' %}{
+
+{% block head %}
+<meta http-equiv="refresh" content="30" />
+{% endblock head %}
+
+{% block style %}
+	.navbar{
+	  background-image: url(static/images/bg_summer.jpg);
+	  background-size: cover;
+	}
+{% endblock style %}
+
+{% block content %}
+<section>
+	<div class="row">
+		<div class="col-md-12 col-sm-12">
+			<h1 style="text-align: center;">First Run</h1>
+			<p style="text-align: center;">Please be patient, I'm pulling in show information for the first time. I'll reload the page for you every 30 seconds until I'm done, though!</p>
+		</div>
+		<div class="col-md-2 col-sm-2 col-md-offset-5 col-sm-offset-5">
+			<img src="static/images/mikuload.gif" />
+		</div>
+</section>
+{% endblock content %}

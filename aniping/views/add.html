@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+{% block style %}
+.addpage:before{
+	        background: linear-gradient(rgba(255, 255, 255, 0.50), rgba(255, 255, 255, 0.50)), url({{fanart}});
+    	}
+{% endblock style %}
+
+{% block bodyclass %}
+class="addpage"
+{% endblock bodyclass %}
+
+{% block content %}
+<section class="add">
+   <div class="addShowPage col-md-12 col-sm-12">
+	   <h1>{{action|title}} {{title}}</h1>
+		 <div class="show-form">
+			<form action="/{{action}}" method="post" accept-charset="UTF-8" class="form-addshow">
+				<div class="row">
+					<div class="col-lg-1 hidden-sm hidden-xs"></div>
+					<div class="col-lg-10 col-sm-12">
+						<div class="row sonarr-result">
+							<div class="col-md-3 hidden-sm hidden-xs poster-wrapper">
+							<a href="http://www.thetvdb.com/?tab=series&amp;id={{sonarr['tvdbId']}}" target="_blank">
+								<img class="series-poster x-series-poster" src="{{sonarr['remotePoster']}}">
+							</a>
+							</div>
+							<div class="col-md-9 col-sm-12">
+								<div class="row">
+									<div class="col-md-12">
+										<h2 class="series-title">
+											{{sonarr['title']}} <span class="year">({{sonarr['year']}})</span>
+
+											<span class="labels">
+												<span class="label label-default">{{sonarr['network']}}</span>
+											</span>
+										</h2>
+									</div>
+								</div>
+								<div class="row new-series-overview x-overview" style="word-wrap: break-word;">
+									<div class="col-md-12 overview-internal">
+									{{sonarr['overview']}}
+									</div>
+								</div>
+								<div class="row">
+									<div class="form-group col-md-5 col-sm-12">
+									<label for="subgroup">Subtitle Group</label>
+										<select class="form-control" id="subgroup" name="subgroup">
+											<option>Select Subtitle Group...</option>
+											{% for group in subgroups %}
+												{% if group != selectedGroup %}
+													<option>{{group}}</option>
+												{% else %}
+													<option selected>{{group}}</option>
+												{% endif %}
+											{% endfor %}
+										</select>
+									</div>
+									<div class="form-group col-md-2 col-sm-12 submit">
+										<input type="hidden" name="dbid" id="dbid" value="{{id}}"/>
+										<input type="hidden" name="beid" id="beid" value="{{sonarr['tvdbId']}}"/>
+										<button class="btn btn-primary" type="submit">{{action|title}} Show</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			 </form>
+		 </div>
+   </div>
+</section>
+{% endblock content %}

@@ -1,0 +1,8 @@
+env/
+aniping/static/images/cache/*
+__pycache__/
+env/
+*.pyc
+*.sqlite
+*.bak
+*.sqlite-journal

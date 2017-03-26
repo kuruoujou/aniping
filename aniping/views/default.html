@@ -1,0 +1,61 @@
+{% if not standalone %}
+	{% extends 'layout.html' %}{
+
+	{% block style %}
+		.navbar{
+		  background-image: url(static/images/bg_summer.jpg);
+		  background-size: cover;
+		}
+	{% endblock style %}
+{% endif %}
+
+
+{% block content %}
+	{% for title,listed in (("watching", watching), ("airing", airing), ("specials", specials), ("movies", movies)) %}
+		{% if listed|length > 0: %}
+		  <section class="shows row" id="{{title}}">
+			  <h1>{{title|title}}</h1>
+					{% for show in listed: %}
+						<div class="show col-lg-4 col-sm-12 col-xs-4">
+							{% if show['starred'] and title!="watching" %}
+								<div class="showcont starred" id="show-{{show['id']}}">
+							{% else %}
+								<div class="showcont" id="show-{{show['id']}}">
+							{% endif %}
+								<div class="pull-left show-image" style="background-image:url('{{show['image']}}');">
+									<div class="show-titstu">
+										<h1 class="show-title">{{show['title']}}</h1>
+										<h2 class="show-studio">{{show['studio']}}</h2>
+									</div>
+									{% if title=="watching" and logged_in %}
+										<div class="show-options hidden-xs hidden-sm">
+											<a href="/edit?id={{show['id']}}" class="edit"><div class="editShow glyphicon glyphicon-edit"></div></a>
+											<a href="/rm?id={{show['id']}}" class="rm"><div class="rmShow glyphicon glyphicon-remove"></div></a>
+										</div>
+										<div class="show-options-mobile 	visible-xs visible-sm">
+											<a href="/edit?id={{show['id']}}" class="edit"><div class="editShow glyphicon glyphicon-edit"></div></a>
+											<a href="/rm?id={{show['id']}}" class="rm"><div class="rmShow glyphicon glyphicon-remove"></div></a>
+										</div>
+									{% elif logged_in %}
+										<div class="show-options hidden-xs hidden-sm">
+											<a href="/add?id={{show['id']}}" class="add"><div class="addShow glyphicon glyphicon-plus"></div></a>
+											<a href="/star?id={{show['id']}}" class="star"><div class="starShow glyphicon glyphicon-star"></div></a>
+										</div>
+										<div class="show-options-mobile visible-xs visible-sm">
+											<a href="/add?id={{show['id']}}" class="add"><div class="addShow glyphicon glyphicon-plus"></div></a>
+											<a href="/star?id={{show['id']}}" class="star"><div class="starShow glyphicon glyphicon-star"></div></a>
+										</div>
+									{% endif %}							
+								</div>
+								<div class="show-info hidden-xs">
+									<div class="nextepi">Episode {{show['next_episode']}} of {{show['total_episodes']}} airs {{show['next_episode_date']}}</div>
+									<div class="description-overlay"><div class="description">{{show['description']|safe}}</div></div>
+									<div class="genrelink"><span class="genre">{{show['genre']}}</span><span class="link"><a href="{{show['link']}}">See on Anilist</a></span></div>
+								</div>
+							</div>
+						</div>
+					{% endfor %}
+			</section>
+		  {% endif %}
+    {% endfor %}    
+{% endblock content %}
