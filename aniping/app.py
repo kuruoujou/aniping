@@ -12,7 +12,7 @@ if app.config["DEBUG"]:
     logging.basicConfig(level=logging.DEBUG)
     logging.debug("Debug mode active.")
 else:
-    logging.basic.Config(level=logging.INFO)
+    logging.basicConfig(level=logging.INFO)
     
 log = logging.getLogger(__name__)
         
