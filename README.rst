@@ -1,7 +1,8 @@
 Aniping
 ========
 
-.. image:: https://img.shields.io/docker/automated/kuroshi/aniping.svg   :target: https://hub.docker.com/r/kuroshi/aniping/
+.. image:: https://img.shields.io/docker/automated/kuroshi/aniping.svg   
+   :target: https://hub.docker.com/r/kuroshi/aniping/
 
 Aniping is a front-end for `Sonarr <https://sonarr.tv/>`_ which collects the current
 season's airing shows from `Anilist <https://anilist.co/>`_ and makes it easy to
