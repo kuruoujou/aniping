@@ -6,3 +6,5 @@ env/
 *.sqlite
 *.bak
 *.sqlite-journal
+/docs/_build/
+
