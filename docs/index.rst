@@ -10,6 +10,7 @@ Welcome to Aniping's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+.. automodule:: aniping
 
 
 Indices and tables
