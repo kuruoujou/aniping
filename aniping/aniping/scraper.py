@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""scraper
+
+This submodule handles functions calling to the external
+scraper, anilist in this case. Functions that gather information
+about airing shows or manipulate those results are here.
+"""
 import os, requests, time, shutil, json, sys, logging
 from datetime import date
 from aniping import db, back_end
@@ -7,11 +13,16 @@ log = logging.getLogger(__name__)
 
 
 def get_access_token(config):
-    """Get the access token from anilist if necessary, otherwis return the last
-    access token we received.
+    """Access Token Getter.
+    
+    If the locally cached token hasn't expired, return it.
+    Otherwise, get a new token from anilist.
+    
+    Args:
+        config (dict): The configuration dictionary.
 
     Returns:
-        The access token as a string.
+        str. The access token.
     """
     anilist_token_file="/tmp/.anilist-token"
     try:
@@ -37,10 +48,13 @@ def get_access_token(config):
     return token
 
 def get_season_string(season_int=None):
-    """Gets next month's airing season (to allow for a preview of what's to come).
+    """Season string generator.
     
-    Args:
-        A season int from anilist to parse (optional)
+    Generates this month's season name, or the season name of a given
+    month.
+    
+    Keyword Args:
+        season_int (int): An optional month int from anilist for a season.
 
     Returns:
         The season (winter, spring, summer, or fall) as a string.
@@ -54,15 +68,38 @@ def get_season_string(season_int=None):
     return season
 
 def get_remote_show_info(aid, config):
-    """Gets the information about a show on anilist.
+    """Remote show info getter.
+    
+    Gets a show's information from anilist. Munges the data as necessary
+    to fit appropriately in the database.
 
     Args:
-        aid: The anilist ID of the show to grab.
-        token: The access token to connect to anilist with.
-        config: The config dictionary as read from config.yml
+        aid (int): The anilist ID of the show to grab.
+        config (dict): The configuration dictionary.
 
     Returns:
-        A dictionary describing the show.
+        dict. The show's description in the aniping database format.
+        A database show is a dictionary with the following structure.
+    
+            * ``id``:               database id (int)
+            * ``aid``:              scraper id (int)
+            * ``beid``:             backend id (int)
+            * ``type``:             type of show, such as 'tv', 'ova', or 'movie'. (str)
+            * ``title``:            the official show title from the scraper (str)
+            * ``alt_title``:        the shows alternate title, such as an english
+                                    translated title. (str)
+            * ``total_episodes``:   The total number of episodes in the show (int)
+            * ``next_episode``:     The next episode to air, according to the scraper (int)
+            * ``next_episode_date``:The day the next episode is due to air from the scraper (int)
+            * ``start_date``:       The day the first episode starts, from the scraper (int)
+            * ``genre``:            A comma separated list of show genres. (str)
+            * ``studio``:           The primary studio producing the show (str)
+            * ``description``:      A synopsis or description for the show (str)
+            * ``link``:             A link to a page describing the show, such as anilist. (str)
+            * ``image``:            A relative link to the show's poster. (str)
+            * ``airing``:           The airing status of the show according to the scraper (str)
+            * ``season_name``:      The name of the season: winter, spring, summer, or fall (str)
+            * ``starred``:          Whether the show is highlighted or not (int)
     """
     image_cache = config['IMAGE_CACHE']
     os.makedirs(image_cache, exist_ok=True)
@@ -105,22 +142,34 @@ def get_remote_show_info(aid, config):
     return show
     
 def get_season_shows(config):
-    """Gets the list of this season's shows from anilist.
+    """Season show list getter.
+    
+    Gets the list of this season's shows from anilist.
+    
+    Args:
+        config (dict): The configuration dictionary.
+        
+    Returns:
+        list. A list of shows in the anilist format. These are
+        expected to be run through get_remote_show_info, as anilist
+        does not provide everything for every show in this output.
     """
     token = get_access_token(config)
     target_date = date.today()
     airing_list = requests.get("https://anilist.co/api/browse/anime?year=%s&season=%s&full_page=true&access_token=%s"%(target_date.year,get_season_string(),token))
 
     return airing_list.json()
-    
-def get_listed_shows():
-    """Just calls back to db.get_all_shows()
-    """
-    log.debug("Calling back db for getting all shows.")
-    return db.get_all_shows()
 
 def update_show(aid, config):
-    """Adds or edits a show in the local database based on ID
+    """Show updater.
+    
+    Adds or edits a show in the local database based on anilist id. Used
+    by the scraper to add and update show information. Sleeps for a quarter second
+    after each call to help prevent rate-limiting by anilist.
+    
+    Args:
+        aid (int): Anilist ID of the show to update.
+        config (dict): The configuration dictionary.        
     """
     show = get_remote_show_info(aid, config)
     if not show:
@@ -137,11 +186,29 @@ def update_show(aid, config):
     time.sleep(0.25)
     
 def get_shows_by_category(config, search_results=None):
-    """Gets all shows from the DB and seperates into watching,
-    tv, movies, and specials."""
+    """Show getter function.
+    
+    Gets all shows from the DB and seperates into watching,
+    tv, movies, and specials.
+    
+    Args:
+        config (dict): The configuration dictionary.
+        
+    Keyword Args:
+        search_results (str): A list of database shows to parse into
+                              the separate lists instead of all shows.
+    
+    Returns:
+        tuple. 4 lists of shows.
+        
+            * watching -- Shows currently being watched.
+            * airing -- TV shows being aired.
+            * specials -- TV and Web Specials (OVA, ONA, etc.) airing or due to air.
+            * movies -- Movies airing or due to premiere.
+    """
     if not search_results:
         log.debug("No list of shows provided, so getting all listed shows.")
-        search_results = get_listed_shows()
+        search_results = db.get_all_shows()
     watching = []
     log.debug("Getting shows being watched from backend.")
     be_watching = back_end.get_watching_shows(config)
@@ -164,13 +231,20 @@ def get_shows_by_category(config, search_results=None):
     return watching, airing, specials, movies
     
 def scrape_shows(config):
-    """Checks our anilist for shows and updates them in the database if they're there. If not, adds them.
-    Deletes everything else.
+    """Show scraper function.
+    
+    Checks our anilist for shows and updates them in the database 
+    if they're there. If not, adds them. Deletes everything else.
+    Typically run in a separate thread from the main server instance.
+    Should run regularly to keep the database up to date.
+    
+    Args:
+        config (dict): The configuration dictionary.
     """
     log.debug("Starting to scrape shows.")
     sys.stdout.flush()
     log.debug("Getting all shows from DB...")
-    all_shows = get_listed_shows()
+    all_shows = db.get_all_shows()
     log.debug("ALL SHOWS\n====================\n{0}".format(all_shows))
     log.debug("Getting this seasons's shows")
     airing_list = get_season_shows(config)  

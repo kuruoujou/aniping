@@ -1,25 +1,38 @@
 #!/usr/bin/env python3
+"""back_end
+
+This submodule handles functions dealing with the aniping backend
+instance, sonarr in this case.
+
+This is a terminal submodule for the aniping package, and so should
+not import any additional aniping submodules.
+"""
 import requests, logging
 
 log = logging.getLogger(__name__)
 
 
 def check_auth(username, password, config):
-    """Checks if a user gives a correct username and password.
-    User and pass are checked back agains sonarr, we do not handle our own
-    authentication.
+    """Authentication check function.
+    
+    Checks if a user gives a correct username and password.
+    User and pass are checked back against sonarr, 
+    we do not handle our own authentication. Unfortunately,
+    particularly with the form authentication, this is a bit
+    fragile.
  
     Args:
-            username: The username to check.
-            password: The password to check.
-            config: The config dictionary
+        username (str): The username to check.
+        password (str): The password to check.
+        config (dict): The configuration dictionary
  
     Returns:
-            A boolean determining if the crednetials are valid.
+        bool.
+        
+            * True -- user is authenticated
+            * False -- user is not authenticated or an error occurred
+            
     """
-    # This is incredibly fragile, but short of implementing our own auth,
-    # which I don't want to do since this is just another sonarr frontend,
-    # I don't have any ideas.
     log.debug("Entering check_auth")
     login_type = check_for_login(config)
     if not login_type:
@@ -42,15 +55,20 @@ def check_auth(username, password, config):
     return False
     
 def check_for_login(config):
-    """Checks if logins are enabled for sonarr, and if so, checks
+    """Login check function.
+    
+    Checks if logins are enabled for sonarr, and if so, checks
     which kind we need (forms or basic).
     
     Args:
-        config: the config dictionary
+        config (dict): the configuration dictionary
         
     Returns:
-        "form" for form-based login, "basic" for basic http login,
-        or None for no login.
+        str.
+        
+            * ``form`` for form-based login
+            * ``basic`` for basic http login
+            * None for no login required
     """
     log.debug("Checking if sonarr requires logins.")
     out = requests.get(config['SONARR']['URL'])
@@ -65,14 +83,17 @@ def check_for_login(config):
     return None
     
 def search(term, config):
-    """Searches sonarr for a particular show.
+    """Sonarr search function
+    
+    Searches sonarr for a particular show. This searches
+    whatever indexers sonarr has configured.
     
     Args:
-        term: The title of the show we're searching for.
-        config: The config dictionary.
+        term (str): The title of the show we're searching for.
+        config (dict): The configuration dictionary.
     
     Returns:
-        A json list of show results.
+        list. A list of dictionaries describing the show in sonarr's format.
     """
     log.debug("Entering search. Trying to find show using Sonarr's search.")
     output = requests.get("{0}/api/series/lookup?term={1}&apikey={2}".format(config['SONARR']['URL'], term, config['SONARR']['API_KEY'])).json()
@@ -83,23 +104,39 @@ def search(term, config):
     return output
     
 def get_show(id, config):
-    """Gets a specific show from sonarr. Because sonarr doesn't have
-    internal IDs we can always use (just post-addition), we use the TVDB id
-    to find a show.
+    """Show getter function
+    
+    Gets a specific show from sonarr. Because sonarr doesn't have
+    internal IDs we can always use, we use the TVDB id
+    to find a show, which should be just as unique. All this function
+    does is call back_end.search with a ``tvdb:`` search keyword.
+    
+    Args:
+        id (int): The TVDB ID for the show.
+        config (dict): The configuration dictionary.
+        
+    Returns:
+        dict. A dictionary describing the show in sonarr's format.
     """
-    log.debug("Entering et show. Getting show from sonarr - calling search with TVDB ID {0}".format(id))
+    log.debug("Entering get show. Getting show from sonarr - calling search with TVDB ID {0}".format(id))
     output = search("tvdb:{0}".format(id), config)
     log.debug("Returning {0}".format(output[0]['title']))
     return output[0]
     
 def subgroup_selected(beid, config):
-    """Uses results from search to determine which subgroup is selected.
-    We base it on the tags.
+    """Subgroup getter function.
+    
+    Uses results from search to determine which subgroup is selected.
+    We base it on the tags. Right now, the first tag is assumed to be
+    the subgroup.
     
     Args:
-        beid: The tvdb id of the show to get the subgroup for
+        beid (int): The tvdb id of the show to get the subgroup for.
+        config (dict): The configuration dictionary.
+        
     Returns:
-        The first tag on the show, which we assume to be the subgroup.
+        str. The first tag on the show, which we assume to be the subgroup.
+        None if none is found.
     """
     shows = get_watching_shows(config)
     for item in shows:
@@ -109,21 +146,27 @@ def subgroup_selected(beid, config):
     return None
     
 def fanart(search_results):
-    """Returns a list of fanart URLs based on search results.
+    """Fanart getter function.
+    
+    Returns a list of fanart URLs based on search results.
+    
     Args:
-        search_results: sonarr search results.
+        search_results (list): Results from an earlier sonarr search.
+        
     Returns:
-        A list of all fanart urls in the results.
+        list. All fanart urls in the results.
     """
     return [x['url'] for x in search_results['images'] if x['coverType'] == 'fanart']
     
 def add_update_show(tvdb, subgroup, config):
-    """Adds or edits a show in sonarr.
+    """Show updater function.
+    
+    Adds or edits a show in sonarr.
     
     Args:
-        tvdb: The TVDBid of the show we're adding
-        subgroup: The subgroup we're using
-        config: The config dictionary.
+        tvdb (int): The TVDB ID of the show we're adding or editing.
+        subgroup (str): The subgroup we're using for this show.
+        config (dict): The configuration dictionary.
     """
     tag = subgroup_tag(subgroup, config)
     quality = get_quality_profile(config)
@@ -152,11 +195,17 @@ def add_update_show(tvdb, subgroup, config):
         requests.put("{0}/api/series?apikey={1}".format(config['SONARR']['URL'], config['SONARR']['API_KEY']), json=show)
     
 def subgroup_tag(subgroup, config):
-    """Adds a subgroup tag and restriction if it doesn't exist.
+    """Subgroup tag creation function.
+    
+    Adds a subgroup tag and restriction if it doesn't exist
+    in sonarr. Returns the tag if it does.
     
     Args:
-        subgroup: The subgroup to add
-        config: The config dictionary
+        subgroup (str): The subgroup to add as a tag.
+        config (dict): The configuration dictionary.
+    
+    Returns:
+        int. The sonarr ID of the tag that was created.
     """
     tag = get_tag(subgroup, config)
     if not tag:
@@ -166,11 +215,17 @@ def subgroup_tag(subgroup, config):
     return tag
     
 def get_tag(tag, config):
-    """Searches the tags for a specific tag. Returns it if it exists, none otherwise.
+    """Tag getter function.
+    
+    Searches the tags for a specific tag, and returns it
+    if it's there.
     
     Args:
-        tag: the tag we're searching for
-        config: the config dictionary
+        tag (str): the tag we're searching for
+        config (dict): the configuration dictionary
+        
+    Returns:
+        int. The sonarr ID of the tag if it exists. None if it does not.
     """
     tags = requests.get("{0}/api/tag?apikey={1}".format(config['SONARR']['URL'], config['SONARR']['API_KEY']))
     for checktag in tags.json():
@@ -179,10 +234,16 @@ def get_tag(tag, config):
     return None
     
 def get_quality_profile(config):
-    """Get the quality profile ID from the string listed in config.
+    """Quality profile getter.
+    
+    Get the quality profile ID from the string listed in the
+    configuration dictionary.
     
     Args:
-        config: The config dictionary
+        config (dict): The configuration dictionary
+    
+    Returns:
+        int. The profile id if it is found, defaults to 1 if it is not.
     """
     profiles = requests.get("{0}/api/profile?apikey={1}".format(config['SONARR']['URL'], config['SONARR']['API_KEY']))
     for profile in profiles.json():
@@ -193,11 +254,17 @@ def get_quality_profile(config):
     return 1
     
 def get_watching_shows(config):
-    """Get all of the shows we're downloading in sonarr. This is basically
-    just a list of shows in sonarr.
+    """Show getter function.
+    
+    Get all of the shows we're downloading in sonarr. This is basically
+    just a list of shows in sonarr, because it doesn't store shows
+    that are not being downloaded.
     
     Args:
-        config: The config dictionary
+        config (dict): The configuration dictionary
+    
+    Returns:
+        list. A list of dictionaries decribing shows in sonarr's format.
     """
     shows = requests.get("{0}/api/series?apikey={1}".format(config['SONARR']['URL'], config['SONARR']['API_KEY'])).json()
     for show in shows:
@@ -205,12 +272,15 @@ def get_watching_shows(config):
     return shows
     
 def remove_show(config, id):
-    """Remove a given show from sonarr. It will not delete files.
-    The backend ID we're given is not the ID we need, so we'll need to look it up first.
+    """Show remover function.
+    
+    Remove a given show from sonarr. It will not delete files.
+    The backend ID we're given is not the ID we need, so the show
+    is looked up first.
     
     Args:
-        config: the config dictionary
-        id: the tvdb id of the show.
+        config (dict): the configuration dictionary.
+        id (int): The TVDB ID of the show.
     """
     shows = get_watching_shows(config)
     show = [x for x in shows if x['beid'] == id][0]

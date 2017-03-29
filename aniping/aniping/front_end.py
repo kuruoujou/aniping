@@ -238,7 +238,7 @@ def get_shows_for_display(config, term=None):
     Args:
         config (dict): The configuration dictionary.
     
-    Kwargs:
+    Keyword Args:
         term(str): A search term to filter on.
         
     Returns:
