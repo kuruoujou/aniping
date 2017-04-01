@@ -1,6 +1,14 @@
 aniping package
 ===============
 
+Module contents
+---------------
+
+.. automodule:: aniping
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 Submodules
 ----------
 
@@ -48,15 +56,6 @@ aniping.search module
 ---------------------
 
 .. automodule:: aniping.search
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: aniping
     :members:
     :undoc-members:
     :show-inheritance:
