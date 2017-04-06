@@ -24,7 +24,6 @@ If you just want to get going, head over to the :ref:`quick-start` to get up and
    :caption: User Guide:
 
    quick-start
-   installation
    usage
 ..
 
