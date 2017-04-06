@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+"""search
+
+This submodule handles functions to call out to the
+search engine. Currently, this engine is nyaa.
+We primarily use the search engine for gathering
+information about subgroups currently working on a show.
+"""
 import feedparser, logging
 from urllib.parse import quote_plus
 from aniping import db
@@ -6,23 +13,32 @@ from aniping import db
 log = logging.getLogger(__name__)
 
 def query(query):
-        """Searches nyaa for a given query.
+        """Query search function.
+        
+        Searches nyaa for a given query and returns results.
         
         Args:
-                query: The query to search nyaa with
+            query (str): The query to search nyaa with
+                
         Returns:
-                A list of items from rss.
+            list. Items from rss.
         """
         rss = feedparser.parse("https://www.nyaa.se/?page=rss&cats=1_37&filter=2&term={0}".format(quote_plus(query)))
         return rss['items']
 
 def results(id):
-        """Searches nyaa for a given show and returns the results.
+        """Result gathering function.
+        
+        Searches nyaa for a given show and returns the results.
 
         Args:
-                id: The ID of the show to search for.
+            id (int): The database id of the show to search for.
+                
         Returns:
-                A list of sub groups from the results, along with a list of raw results, in a tuple (in that order).
+            tuple. Contains two lists.
+                
+                * groups - A list of sub groups parsed from the results.
+                * results - A list of raw results.
         """
         show = db.get_show(id=id)
         results = query(show['title'])
@@ -30,12 +46,17 @@ def results(id):
         return groups, results
 
 def get_subgroups(search_results):
-        """Parses the nyaa search results and comes up with a list of sub groups.
+        """Subgroup Parsing Function.
+        
+        Parses the nyaa search results and comes up with a list of sub groups.
+        Most sub groups use a normal format of ``[group_name] show info [resolution]``,
+        with other data potentially in brackets.
         
         Args:
-                search_results: The results from a nyaa search.
+            search_results (list): The results from a nyaa search.
+                
         Returns:
-                A list of sub groups listed in the results.
+            list. Subgroups listed in the results.
         """
         groups = set()
         for result in search_results:
