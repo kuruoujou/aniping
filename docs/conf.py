@@ -34,7 +34,7 @@ sys.path.insert(0, os.path.abspath('../aniping'))
 extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.coverage',
     'sphinx.ext.githubpages',
-    'sphinxcontrib.napoleon']
+    'sphinx.ext.napoleon']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
