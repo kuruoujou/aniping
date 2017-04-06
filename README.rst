@@ -3,6 +3,8 @@ Aniping
 
 .. image:: https://img.shields.io/docker/automated/kuroshi/aniping.svg   
    :target: https://hub.docker.com/r/kuroshi/aniping/
+.. image:: https://readthedocs.org/projects/aniping/badge/?version=latest
+   :target: http://aniping.readthedocs.io/en/latest/?badge=latest
 
 Aniping is a front-end for `Sonarr <https://sonarr.tv/>`_ which collects the current
 season's airing shows from `Anilist <https://anilist.co/>`_ and makes it easy to
@@ -73,7 +75,7 @@ still, such as:
 - Improve documentation with Sphinx and RTD, or maybe GH-Pages
 - Create a test framework (nose?) and implement a CI process using travis
 - Modularize the aniping module, so that sonarr and anilist and other pieces can
-be swapped out with simple config file changes
+  be swapped out with simple config file changes
 
 So if you want to help out, please do! If you find a bug or something, please go
 ahead and make an issue, or if you want to jump in and make a PR, there's nothing
