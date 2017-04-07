@@ -187,7 +187,7 @@ def get_selected_group(beid, config):
     """
     return back_end.subgroup_selected(beid, config)
     
-def get_fanart(show):
+def get_fanart(beid):
     """Fanart getter function.
     
     Gets some fanart for the show from the backend.
@@ -195,12 +195,12 @@ def get_fanart(show):
     just get the first item from that list.
     
     Args:
-        show (dict): A show description dictionary from the backend.
+        beid (int): the backend ID for the show.
         
     Returns:
         str. A link to some fanart.
     """
-    return back_end.fanart(show)[0]
+    return back_end.fanart(beid)[0]
     
 def add_update_show(dbid, beid, subgroup, config):
     """Show addition and modification function.

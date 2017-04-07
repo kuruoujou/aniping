@@ -202,7 +202,7 @@ def update_show():
             db_show = front_end.get_show_from_db(id)
             subgroups = front_end.get_subgroups(id)
             selected_group = front_end.get_selected_group(sonarr_show['beid'], app.config)
-            fanart = front_end.get_fanart(sonarr_show)
+            fanart = front_end.get_fanart(sonarr_show['beid'])
             log.debug("Rendering form for user")
             return render_template("add.html", id=id, title=db_show['title'], subgroups=subgroups, selectedGroup=selected_group, sonarr=sonarr_show, logged_in=logged_in, fanart=fanart, action=request.path.strip('/'))
         log.debug("No ID sent with request, so just refresh user's page to the home.")
