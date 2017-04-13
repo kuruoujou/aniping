@@ -21,7 +21,6 @@ class Sonarr(BackEnd):
         self.__author__     = "Spencer Julian <hellothere@spencerjulian.com>"
         self.__version__    = "0.01"
         
-        
         self.config = self._config['SONARR']
         self._name = self.config['NAME'] if 'NAME' in self.config else 'Sonarr'
         self._url = self.config['URL']
