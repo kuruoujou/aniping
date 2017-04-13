@@ -25,7 +25,7 @@ class Sonarr(BackEnd):
         self._name = self.config['NAME'] if 'NAME' in self.config else 'Sonarr'
         self._url = self.config['URL']
         self._api_key = self.config['API_KEY']
-        #self._quality_profile = self._quality_profile_selected(self.config['QUALITY_PROFILE'])
+        self._quality_profile = self._quality_profile_selected(self.config['QUALITY_PROFILE'])
         self._tag_prefix = "ap:"
     
     @property 

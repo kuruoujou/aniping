@@ -140,3 +140,15 @@ class BackEnd(AniPlugin):
         
     def fanart(self, shows):
         raise NotImpelmentedError()
+        
+class SearchEngine(AniPlugin):
+    @property
+    def name(self) -> Optional[str]:
+        return None
+    
+    @property
+    def url(self) -> str:
+        return None
+               
+    def get_show(self, query):
+        raise NotImplementedError()
