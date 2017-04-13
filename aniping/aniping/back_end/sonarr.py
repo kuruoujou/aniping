@@ -8,18 +8,25 @@ This is a terminal submodule for the aniping package, and so should
 not import any additional aniping submodules.
 """
 import requests, logging
-from aniping.back_end import BackEnd
+from aniping.plugins import BackEnd
 
 _logger = logging.getLogger(__name__)
 
 class Sonarr(BackEnd):
 
-    def __init__(self, config):
-        self.config = config['SONARR']
+    def __init__(self, config, plugin_manager):
+        super().__init__(config, plugin_manager)
+        self.__name__       = "Sonarr"
+        self.__id__         = "sonarr"
+        self.__author__     = "Spencer Julian <hellothere@spencerjulian.com>"
+        self.__version__    = "0.01"
+        
+        
+        self.config = self._config['SONARR']
         self._name = self.config['NAME'] if 'NAME' in self.config else 'Sonarr'
         self._url = self.config['URL']
         self._api_key = self.config['API_KEY']
-        self._quality_profile_selected = self.config['QUALITY_PROFILE']
+        #self._quality_profile = self._quality_profile_selected(self.config['QUALITY_PROFILE'])
         self._tag_prefix = "ap:"
     
     @property 
@@ -47,17 +54,6 @@ class Sonarr(BackEnd):
                 return "form"
         _logger.debug("No logins required.")
         return None
-    
-    @property
-    def _quality_profile(self) -> int:
-        _logger.debug("Checking for selected quality profile {0} in sonarr".format(self._quality_profile_selected))
-        profiles = requests.get("{0}/api/profile?apikey={1}".format(self.url, self.api_key))
-        for profile in profiles.json():
-            if profile['name'].lower().replace(" ","") == self._quality_profile_selected.lower().replace(" ",""):
-                _logger.debug("Found quality profile {0} as ID {1}".format(profile['name'], profile['id']))
-                return profile['id']
-        _logger.debug("Quality profile {0} not found, defaulting to profile ID 1".format(self._quality_profile_selected))
-        return 1
         
     def check_auth(self, username, password):
         """Authentication check function.
@@ -80,17 +76,18 @@ class Sonarr(BackEnd):
                 
         """
         _logger.debug("Entering check_auth")
-        if not self._login_type:
+        login_type = self._login_type
+        if not login_type:
             _logger.debug("Sonarr does not have logins configured. Return logged in.")
             return True
-        elif self._login_type == "basic":
+        elif login_type == "basic":
             _logger.debug("Sonarr is using basic HTTP authentication, trying to authenticate...")
             sonarr_output = requests.get(self.url, auth=(username, password))
             if sonarr_output.status_code == 200:
                 _logger.debug("Successful.")
                 return True
             _logger.debug("Failed.")
-        elif self._login_type == "form":
+        elif login_type == "form":
             _logger.debug("Sonarr is using form-based authentication. This is fragile for us. Trying to authenticate...")
             sonarr_output = requests.post(self.url + "/login", json={"username": username, "password": password})
             if "Sonarr Ver." in sonarr_output.text:
@@ -253,6 +250,28 @@ class Sonarr(BackEnd):
         fanart = [x['url'] for x in show['images'] if x['coverType'] == 'fanart']
         _logger.debug("Found {0} fanart links. Returning the list.".format(len(fanart)))
         return fanart
+
+    def _quality_profile_selected(self, quality_profile_selected):
+        """Quailty profile translation function.
+        
+        Translates a quality profile string from the config file
+        to the ID in sonarr.
+        
+        Args:
+            quality_profile_selected (str): The selected quality profile
+            in the config file.
+            
+        Returns:
+            int. The ID of the selected quality profile, or 1 if it wasn't found.
+        """
+        _logger.debug("Checking for selected quality profile {0} in sonarr".format(quality_profile_selected))
+        profiles = requests.get("{0}/api/profile?apikey={1}".format(self.url, self.api_key))
+        for profile in profiles.json():
+            if profile['name'].lower().replace(" ","") == quality_profile_selected.lower().replace(" ",""):
+                _logger.debug("Found quality profile {0} as ID {1}".format(profile['name'], profile['id']))
+                return profile['id']
+        _logger.debug("Quality profile {0} not found, defaulting to profile ID 1".format(quality_profile_selected))
+        return 1
         
     def _subgroup_tag(self, subgroup):
         """Subgroup tag creation function.
