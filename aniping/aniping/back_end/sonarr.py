@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
-"""back_end
-
-This submodule handles functions dealing with the aniping backend
-instance, sonarr in this case.
-
-This is a terminal submodule for the aniping package, and so should
-not import any additional aniping submodules.
-"""
 import requests, logging
 from aniping.plugins import BackEnd
 
 _logger = logging.getLogger(__name__)
 
 class Sonarr(BackEnd):
-
+    """Sonarr backend plugin.
+    
+    This plugin implements the sonarr backend for finding and downloading shows.
+    """
     def __init__(self, config, plugin_manager):
+        """Initilizes the sonarr backend plugin.
+        
+        Args:
+            config (dict): The configuration dictionary as read by flask.
+            plugin_manager (:obj:`AniPluginManager): An instance of the AniPluginManager.
+        """
         super().__init__(config, plugin_manager)
         self.__name__       = "Sonarr"
         self.__id__         = "sonarr"
@@ -25,23 +26,28 @@ class Sonarr(BackEnd):
         self._name = self.config['NAME'] if 'NAME' in self.config else 'Sonarr'
         self._url = self.config['URL']
         self._api_key = self.config['API_KEY']
+        self._library_path = self.config['LIBRARY_PATH']
         self._quality_profile = self._quality_profile_selected(self.config['QUALITY_PROFILE'])
         self._tag_prefix = "ap:"
     
     @property 
     def name(self) -> str:
+        """str: Returns the plugin's name."""
         return self._name
     
     @property 
     def url(self) -> str:
+        """str: Returns the configured url of the sonarr instance."""
         return self._url
     
     @property
     def api_key(self) -> str:
+        """str: Returns the configured sonarr api key."""
         return self._api_key
         
     @property
     def _login_type(self) -> str:
+        """str: Returns "basic" or "form", depending on what sort of logons sonarr requires. None if neither."""
         _logger.debug("Checking if sonarr requires logins.")
         out = requests.get(self.url)
         if out.status_code == 401:
@@ -55,9 +61,8 @@ class Sonarr(BackEnd):
         return None
         
     def check_auth(self, username, password):
-        """Authentication check function.
+        """Checks if a user gives a correct username and password.
         
-        Checks if a user gives a correct username and password.
         User and pass are checked back against sonarr, 
         we do not handle our own authentication. Unfortunately,
         particularly with the form authentication, this is a bit
@@ -95,11 +100,15 @@ class Sonarr(BackEnd):
             _logger.debug("Failed.")
         return False
         
-    def search(self, term):
-        """Sonarr search function
+    def check_for_login(self):
+        if not self._login_type:
+            return False
+        return True
         
-        Searches sonarr for a particular show. This searches
-        whatever indexers sonarr has configured.
+    def search(self, term):
+        """Searches sonarr for a particular show. 
+        
+        This searches whatever indexers sonarr has configured.
         
         Args:
             term (str): The title of the show we're searching for.
@@ -116,15 +125,14 @@ class Sonarr(BackEnd):
         return output
         
     def get_show(self, beid):
-        """Show getter function
+        """Gets a specific show from sonarr. 
         
-        Gets a specific show from sonarr. Because sonarr doesn't have
-        internal IDs we can always use, we use the TVDB id
+        Because sonarr doesn't have internal IDs we can always use, we use the TVDB id
         to find a show, which should be just as unique. All this function
         does is call back_end.search with a ``tvdb:`` search keyword.
         
         Args:
-            id (int): The TVDB ID for the show.
+            beid (int): The TVDB ID for the show.
             
         Returns:
             dict. A dictionary describing the show in sonarr's format.
@@ -135,10 +143,9 @@ class Sonarr(BackEnd):
         return output[0]
         
     def get_watching_shows(self):
-        """Show getter function.
+        """Get all of the shows we're downloading in sonarr. 
         
-        Get all of the shows we're downloading in sonarr. This is basically
-        just a list of shows in sonarr, because it doesn't store shows
+        This is basically just a list of shows in sonarr, because it doesn't store shows
         that are not being downloaded.
         
         Returns:
@@ -152,9 +159,7 @@ class Sonarr(BackEnd):
         return shows
         
     def add_update_show(self, beid, subgroup):
-        """Show updater function.
-        
-        Adds or edits a show in sonarr.
+        """Adds or edits a show in sonarr.
         
         Args:
             beid (int): The TVDB ID of the show we're adding or editing.
@@ -180,7 +185,7 @@ class Sonarr(BackEnd):
                 "titleSlug":        show['titleSlug'],
                 "images":           show['images'],
                 "seasons":          show['seasons'],
-                "rootFolderPath":   config['LIBRARY_PATH'],
+                "rootFolderPath":   self._library_path,
                 "addOptions":       {"ignoreEpisodesWithFiles":True},
                 "tags":             [tag]
             }
@@ -190,10 +195,9 @@ class Sonarr(BackEnd):
             requests.put("{0}/api/series?apikey={1}".format(self.url, self.api_key), json=show)
         
     def remove_show(self, beid):
-        """Show remover function.
-        
-        Remove a given show from sonarr. It will not delete files.
-        The backend ID we're given is not the ID we need, so the show
+        """Remove a given show from sonarr.
+
+        It will not delete files. The backend ID we're given is not the ID we need, so the show
         is looked up first.
         
         Args:
@@ -207,11 +211,9 @@ class Sonarr(BackEnd):
         requests.delete("{0}/api/series/{1}?apikey={2}".format(self.url, show['id'], self.api_key))
         
     def subgroup_selected(self, beid):
-        """Subgroup getter function.
+        """Uses results from search to determine which subgroup is selected.
         
-        Uses results from search to determine which subgroup is selected.
-        We base it on the tags. Right now, the first tag is assumed to be
-        the subgroup.
+        We base it on the tags. Right now, the first tag is assumed to be the subgroup.
         
         Args:
             beid (int): The tvdb id of the show to get the subgroup for.
@@ -226,19 +228,19 @@ class Sonarr(BackEnd):
             _logger.debug("Checking if show ID {0} matches TVDB ID {1}".format(item['tvdbId'], beid))
             if item['tvdbId'] == beid:
                 # Is an ID, needs to be a string.
-                _logger.debug("Match found! Returning tag {0}".format(item['tags'][0]))
-                return item['tags'][0]
+                for tag in item['tags']:
+                    label = self._get_tag(id=tag)
+                    if label.startswith(self._tag_prefix):
+                        _logger.debug("Match found! Returning tag {0}".format(label))
+                        return label
         _logger.debug("No match found, returning None")
         return None
         
     def fanart(self, beid):
-        """Fanart getter function.
-        
-        Returns a list of fanart URLs based on search results.
+        """Returns a list of fanart URLs based on search results.
         
         Args:
             beid (int): The TVDB ID for the show to get fanart from.
-            search_results (list): Results from an earlier sonarr search.
             
         Returns:
             list. All fanart urls in the results.
@@ -251,10 +253,7 @@ class Sonarr(BackEnd):
         return fanart
 
     def _quality_profile_selected(self, quality_profile_selected):
-        """Quailty profile translation function.
-        
-        Translates a quality profile string from the config file
-        to the ID in sonarr.
+        """Translates a quality profile string from the config file to the ID in sonarr.
         
         Args:
             quality_profile_selected (str): The selected quality profile
@@ -273,10 +272,7 @@ class Sonarr(BackEnd):
         return 1
         
     def _subgroup_tag(self, subgroup):
-        """Subgroup tag creation function.
-        
-        Adds a subgroup tag and restriction if it doesn't exist
-        in sonarr. Returns the tag if it does.
+        """Adds a subgroup tag and restriction if it doesn't exist in sonarr. Returns the tag if it does.
         
         Args:
             subgroup (str): The subgroup to add as a tag.
@@ -285,7 +281,7 @@ class Sonarr(BackEnd):
             int. The sonarr ID of the tag that was created.
         """
         _logger.debug("Entering subgroup_tag, Checking if tag exists already.")
-        tag = self._get_tag(subgroup)
+        tag = self._get_tag(label=subgroup)
         if not tag:
             _logger.debug("Tag does not exist. Creating tag and restriction for subgroup {0}".format(subgroup))
             tag = requests.post("{0}/api/tag?apikey={1}".format(self.url, self.api_key), json={'label':self._tag_builder(subgroup)})
@@ -294,33 +290,35 @@ class Sonarr(BackEnd):
         _logger.debug("Found the tag! Returning it.")
         return tag
         
-    def _get_tag(self, tag):
-        """Tag getter function.
-        
-        Searches the tags for a specific tag, and returns it
-        if it's there.
+    def _get_tag(self, label=None, id=None):
+        """Searches the tags for a specific tag, and returns it if it's there.
         
         Args:
-            tag (str): the tag we're searching for
+            label (str): the tag string we're searching for
+            id (str): the tag ID we're searching for
             
         Returns:
             int. The sonarr ID of the tag if it exists. None if it does not.
         """
         _logger.debug("Entering get_tag. Getting all tags from sonarr.")
-        tags = requests.get("{0}/api/tag?apikey={1}".format(self.url, self.api_key))
-        _logger.debug("Found {0} tags. Checking if {1} is in them.".format(len(tags), tag))
-        for checktag in tags.json():
-            if self._tag_builder(tag) == checktag['label']:
-                _logger.debug("Found tag {0} with ID {1}!".format(checktag['label'], checktag['id']))
-                return checktag['id']
-        _logger.debug("Couldn't find any tag with that name, returning None.")
+        tags = requests.get("{0}/api/tag?apikey={1}".format(self.url, self.api_key)).json()
+        if label:
+            _logger.debug("Found {0} tags. Checking if {1} is in them.".format(len(tags), label))
+            for checktag in tags:
+                if self._tag_builder(label) == checktag['label']:
+                    _logger.debug("Found tag {0} with ID {1}!".format(checktag['label'], checktag['id']))
+                    return checktag['id']
+        if id:
+            _logger.debug("Found {0} tags. Checking if ID {1} is in them.".format(len(tags), id))
+            for checktag in tags:
+                if checktag['id'] == id:
+                    _logger.debug("Found tag id {0} with label {1}!".format(checktag['id'], checktag['label']))
+                    return checktag['label']
+        _logger.debug("Couldn't find any relevant tags, returning None.")
         return None
         
     def _tag_builder(self, tag):
-        """Tag builder function.
-        
-        Builds the tag name to ensure continuity between tag 
-        functions.
+        """Builds the tag name to ensure continuity between tag functions.
         
         Args:
             tag (str): The tag to build.
@@ -330,3 +328,4 @@ class Sonarr(BackEnd):
             appropriately.
         """
         return "{0}{1}".format(self._tag_prefix, tag.lower().replace(" ","_"))
+        

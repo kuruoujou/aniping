@@ -1,11 +1,4 @@
 #!/usr/bin/env python3
-"""search
-
-This submodule handles functions to call out to the
-search engine. Currently, this engine is nyaa.
-We primarily use the search engine for gathering
-information about subgroups currently working on a show.
-"""
 import feedparser, logging
 from urllib.parse import quote_plus
 from aniping.plugins import SearchEngine
@@ -46,7 +39,18 @@ CATEGORY_MAP = {
     }  
 
 class Nyaa(SearchEngine):
+    """Nyaa Search Engine Plugin.
+    
+    This plugin implements the nyaa.se search engine for finding shows
+    and subgroups.
+    """
     def __init__(self, config, plugin_manager):
+        """Initilizes the nyaa search plugin.
+        
+        Args:
+            config (dict): The configuration dictionary as read by flask.
+            plugin_manager (:obj:`AniPluginManager): An instance of the AniPluginManager.
+        """
         super().__init__(config, plugin_manager)
         self.__name__       = "Nyaa Torrents"
         self.__id__         = "nyaa"
@@ -56,23 +60,27 @@ class Nyaa(SearchEngine):
         self.config = self._config['NYAA']
         self._name = self.config['NAME'] if 'NAME' in self.config else 'Nyaa Torrents'
         self._filter = FILTER_MAP[self.config['FILTER'].lower()] if 'FILTER' in self.config else 0
-        self._category = CATEGORY_MAP[self.config['CATEGORY'].lower()] if 'CATEGORY' in self.config else 0
+        self._category = CATEGORY_MAP[self.config['CATEGORY'].lower()] if 'CATEGORY' in self.config else "0_0"
         self._url = "https://www.nyaa.se/?page=rss&cats={0}&filter={1}".format(self._category, self._filter)
         
     @property 
     def name(self) -> str:
+        """str. Returns the name of the plugin."""
         return self._name
     
     @property 
     def url(self) -> str:
+        """str. Returns the RSS url we are parsing from."""
         return self._url
         
     @property
     def category(self) -> str:
+        """str. Returns the category ID we are looking at in Nyaa."""
         return self._category
         
     @property
     def filter(self) -> int:
+        """int. Returns the filter ID we are looking at in nyaa."""
         return self._filter
         
     def results(self, query):

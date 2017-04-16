@@ -35,25 +35,32 @@ Configuration
 Now that you've got the docker container running, you'll need to make a config file. In your 
 ``$LOCAL_CONFIG`` directory, place a file called ``config.yml`` with the following::
 
-    LIBRARY_PATH: /path/to/sonarrs/library
-    SONARR:
-        URL: https://my.sonarr.url
-        API_KEY: my-sonarr-api-key
-        QUALITY_PROFILE: HD - 720p/1080p
-    ANILIST:
-        CLIENT_ID: anilist_client_id
-        CLIENT_SECRET: anilist_client_secret
-    SECRET_KEY: this is a totally random string and can be whatever you want
-    IMAGE_CACHE: static/images/cache
+		SONARR:
+			URL: https://my.sonarr.url
+			API_KEY: my-sonarr-api-key
+			QUALITY_PROFILE: HD - 720p/1080p
+			LIBRARY_PATH: /path/to/sonarrs/library
+		NYAA:
+			FILTER: A+ Only
+			CATEGORY: Anime - English-translated
+		ANILIST:
+			CLIENT_ID: anilist_client_id
+			CLIENT_SECRET: anilist_client_secret
+		SQLITE:
+			FILE: db/aniping.sqlite
+			SCHEMA: schema.ddl
+		BACK_END: Sonarr
+		DATABASE: Sqlite
+		SEARCH:
+			- Nyaa
+		SCRAPER:
+			- Anilist
+		SECRET_KEY: this is a totally random string and can be whatever you want
+		IMAGE_CACHE: static/images/cache
+
 	
 **Spacing is important!** The file will not be read correctly if it is not indented, with spaces, like
-it is above. You need to change the following values:
-
-- ``LIBRARY_PATH`` is the path that *sonarr* uses as it's library.
-- ``URL`` is the url of your sonarr instance. It can be an IP Address.
-- ``API_KEY`` is your sonarr API key. Get it via Settings->General through the sonarr GUI.
-- ``CLIENT_ID`` and ``CLIENT_SECRET`` are your anilist client ID and Secret, respectively. Go to the  `Anilist Developer Page`_ and click "Create New Client" to get them.
-- ``SECRET_KEY`` is just a random string. Truly random or keyboard mashing, make it what you want.
+it is above. You will need to change the values above to suit your needs. Defaults you don't need to change but you may want to change include ``BACK_END``, ``DATABASE``, ``SEARCH``, ``SCRAPER``, ``SQLITE``-> ``FILE``, ``SONARR``-> ``QUALITY_PROFILE``, and both options under ``NYAA``. You absolutely should not change ``SQLITE``-> ``SCHEMA`` unless you are using a different database, nor should you change ``IMAGE_CACHE`` unless you really know what you're doing. Everything else you will need to change.
 
 .. _Docker: https://docker.com
 .. _Heroku: https://heroku.com

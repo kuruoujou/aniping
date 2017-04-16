@@ -14,7 +14,7 @@ a weekly job to scrape shows from our sources.
 from flask import render_template, session, request, make_response, escape, jsonify, abort, redirect
 from urllib.parse import unquote_plus
 from aniping import front_end, config
-from flask_apscheduler import APScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 import os, time, sys, datetime, atexit, logging
 
 app = application = config.Flask(__name__, template_folder='views', static_folder='static')
@@ -31,20 +31,12 @@ else:
 log = logging.getLogger(__name__)
 """logger: Logging endpoint"""
         
-app.config["JOBS"] = [ {
-    'id': 'scrape_job',
-    'name': "Scrape shows from source",
-    'trigger': 'interval',
-    'days': 7,
-    'func': 'aniping.front_end:scrape_shows',
-    'args': [app.config]
-} ]
+fe = front_end.FrontEnd(app.config)
+"""Front End Module"""
 
-app.config["SCHEDULER_API_ENABLED"] = True
-
-scheduler = APScheduler()
-"""APScheduler(): APScheduler instance to schedule occasional tasks"""
-scheduler.init_app(app)
+scheduler = BackgroundScheduler()
+"""BackgroundScheduler(): APScheduler instance to schedule occasional tasks"""
+scheduler.add_job(fe.scrape_shows, "interval", days=7)
 scheduler.start()
 
 @app.route('/search')
@@ -65,12 +57,12 @@ def index():
         A rendered template, either ``first_time.html`` for the first run or ``default.html`` otherwise.
     """
     log.debug("Entering index, attempting to get shows.")
-    watching, airing, specials, movies = front_end.get_shows_for_display(app.config, request.args.get('q',None))
+    watching, airing, specials, movies = fe.get_shows_for_display(request.args.get('q',None))
     standalone = True if request.path.strip('/') == 'search' else False
-    logged_in = front_end.check_login_id(escape(session['logged_in']), app.config) if 'logged_in' in session else False
+    logged_in = fe.check_login_id(escape(session['logged_in'])) if 'logged_in' in session else False
     if not watching and not airing and not specials and not movies:
         log.debug("No shows found in any category. Starting first time startup.")
-        front_end.do_first_time_setup(app.config)
+        fe.do_first_time_setup()
         return render_template('first_time.html', logged_in=logged_in)
     return render_template('default.html', watching=watching, airing=airing, specials=specials, movies=movies, standalone=standalone, logged_in=logged_in)
 
@@ -89,11 +81,11 @@ def login():
     username = request.form['signin_username']
     password = request.form['signin_password']
     log.debug("Username: {0}".format(username))
-    if front_end.check_auth(username, password, app.config):
+    if fe.check_auth(username, password):
         log.debug("User authenticated. Trying to set session.")
-        cid = front_end.set_login_id()
-        session['logged_in'] = cid
-        log.debug("Session ID: {0}, returning to user".format(cid))
+        session_id = fe.set_login_id()
+        session['logged_in'] = session_id
+        log.debug("Session ID: {0}, returning to user".format(session_id))
         return jsonify({ "login": "success" })
     log.debug("Username or password not recognized, sending 401.")
     response.status = 401
@@ -109,7 +101,7 @@ def logout():
         JSON formatted output describing success.
     """
     log.debug("Entering logout, attempting to end session.")
-    front_end.delete_login_id(escape(session['logged_in']))
+    fe.delete_login_id(escape(session['logged_in']))
     session.pop('logged_in', None)
     log.debug("Returning to user.")
     return jsonify({ "logout": "success" })
@@ -126,9 +118,9 @@ def star():
         JSON formatted output describing success and the ID of the show starred.
     """
     log.debug("Entering star, trying to toggle star.")
-    if front_end.check_login_id(escape(session['logged_in']), app.config):
+    if fe.check_login_id(escape(session['logged_in'])):
         log.debug("Sending show ID {0} to function".format(request.args['id']))
-        front_end.star_show(request.args['id'])
+        fe.star_show(request.args['id'])
         log.debug("Returning to user.")
         return jsonify({ "star": "success", "id": request.args['id'] })
     log.debug("User cannot be authenticated, send 404 to hide page.")
@@ -146,9 +138,9 @@ def drop_show():
         An HTTP redirect to the home page, to refresh.
     """
     log.debug("Entering drop_show, trying to remove show from list.")
-    if front_end.check_login_id(escape(session['logged_in']), app.config):
+    if fe.check_login_id(escape(session['logged_in'])):
        log.debug("Sending show ID {0} to function".format(request.args['id']))
-       front_end.remove_show(request.args['id'], app.config)
+       fe.remove_show(request.args['id'])
        log.debug("Refreshing user's page.")
        return redirect('/')
     log.debug("User cannot be authenticated, send 404 to hide page.")
@@ -180,14 +172,14 @@ def update_show():
         A redirect to the home as a refresh on the POST method.
     """
     log.debug("Entering update_show, trying to {0} show".format(request.path.strip('/')))
-    logged_in = front_end.check_login_id(escape(session['logged_in']), app.config)
+    logged_in = fe.check_login_id(escape(session['logged_in']))
     if logged_in and request.method == 'POST':
        log.debug("Request method is POST, so sending results to function.")
        subgroup = request.form['subgroup']
-       id = request.form['dbid']
+       dbid = request.form['dbid']
        beid = request.form['beid']
-       log.debug("Got SG: {0} ID: {1} and BEID: {2} from form.".format(subgroup, id, beid))
-       front_end.add_update_show(id, beid, subgroup, app.config)
+       log.debug("Got SG: {0} ID: {1} and BEID: {2} from form.".format(subgroup, dbid, beid))
+       fe.add_update_show(dbid, beid, subgroup)
        log.debug("Refreshing user's page.")
        return redirect('/')
     elif logged_in and request.method == 'GET':
@@ -195,14 +187,14 @@ def update_show():
         if 'id' in request.args:
             id = request.args['id']
             log.debug("Attempting to operate on id {0}".format(id))
-            sonarr_show = front_end.search_show_from_backend(id, app.config)
+            sonarr_show = fe.search_show_from_backend(id)
             if not sonarr_show:
                 log.debug("Could not find show from backend with ID {0}".format(id))
                 abort(404)
-            db_show = front_end.get_show_from_db(id)
-            subgroups = front_end.get_subgroups(id)
-            selected_group = front_end.get_selected_group(sonarr_show['beid'], app.config)
-            fanart = front_end.get_fanart(sonarr_show['beid'])
+            db_show = fe.get_show_from_db(id)
+            subgroups = fe.get_subgroups(id)
+            selected_group = fe.get_selected_group(sonarr_show['beid'])
+            fanart = fe.get_fanart(sonarr_show['beid'])
             log.debug("Rendering form for user")
             return render_template("add.html", id=id, title=db_show['title'], subgroups=subgroups, selectedGroup=selected_group, sonarr=sonarr_show, logged_in=logged_in, fanart=fanart, action=request.path.strip('/'))
         log.debug("No ID sent with request, so just refresh user's page to the home.")
@@ -211,4 +203,4 @@ def update_show():
     abort(404)
 
 if __name__=="__main__":
-    app.run(host="0.0.0.0",port="8081",debug=True)
+    app.run(host="0.0.0.0",port=8081,debug=True)
