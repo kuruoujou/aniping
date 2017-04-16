@@ -173,7 +173,7 @@ class Sonarr(BackEnd):
         shows = self.get_watching_shows()
         for item in shows:
             if int(item['tvdbId']) == int(beid):
-                _logger.debug("Found show {0} with ID {1} in watching shows! Updating instead of creating.".format(item['title'], item['tvdbID']))
+                _logger.debug("Found show {0} with ID {1} in watching shows! Updating instead of creating.".format(item['title'], item['tvdbId']))
                 show = item
         if not show:
             _logger.debug("Show not found in watching list, creating a new one.")
