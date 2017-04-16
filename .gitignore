@@ -7,4 +7,4 @@ env/
 *.bak
 *.sqlite-journal
 /docs/_build/
-
+aniping/config/config.yml

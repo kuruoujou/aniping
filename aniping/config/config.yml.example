@@ -1,0 +1,22 @@
+SONARR:
+    URL: https://my.sonarr.url
+    API_KEY: my-sonarr-api-key
+    QUALITY_PROFILE: HD - 720p/1080p
+    LIBRARY_PATH: /path/to/sonarrs/library
+NYAA:
+    FILTER: A+ Only
+    CATEGORY: Anime - English-translated
+ANILIST:
+    CLIENT_ID: anilist_client_id
+    CLIENT_SECRET: anilist_client_secret
+SQLITE:
+    FILE: db/aniping.sqlite
+    SCHEMA: schema.ddl
+BACK_END: Sonarr
+DATABASE: Sqlite
+SEARCH:
+    - Nyaa
+SCRAPER:
+    - Anilist
+SECRET_KEY: this is a totally random string and can be whatever you want
+IMAGE_CACHE: static/images/cache
