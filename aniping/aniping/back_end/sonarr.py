@@ -186,6 +186,8 @@ class Sonarr(BackEnd):
                 "images":           show['images'],
                 "seasons":          show['seasons'],
                 "rootFolderPath":   self._library_path,
+                "seriesType":       "anime",
+                "seasonFolder":     True,
                 "addOptions":       {"ignoreEpisodesWithFiles":True},
                 "tags":             [tag]
             }
