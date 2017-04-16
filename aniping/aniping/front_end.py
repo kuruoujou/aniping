@@ -7,7 +7,7 @@ app.py will only call to this particular submodule, it is acceptable
 to include functions that do nothing but call back to a different
 function in the module.
 """
-import hashlib,time,requests,threading,logging
+import hashlib,time,requests,threading,logging,string
 from pathlib import Path
 from itertools import zip_longest
 from aniping.plugins import AniPlugin, AniPluginManager
@@ -192,7 +192,7 @@ class FrontEnd(AniPlugin):
                     break
         if not output:
             # No synonyms, no titles. We'll try taking the normal title and removing numbers,
-            # then taking the alt title and removing numbers.
+            # then taking the alt title and removing numbers. Then do the same for punctuation.
             # Still no luck? Then we give up.
             _logger.debug("Backend could not find show with title {0}, trying to strip digits.")
             output = self.back_end("search", quote_plus("".join([c for c in show['title'] if not c.isdigit()])))
@@ -241,8 +241,13 @@ class FrontEnd(AniPlugin):
         if show['synonyms']:
             for synonym in show['synonyms']:
                 search_results.extend(self.search("results", synonym))
+        search_results.extend(self.search("results", "".join([c for c in show['title'] if not c.isdigit()])))
+        search_results.extend(self.search("results", "".join([c for c in show['alt_title'] if not c.isdigit()])))
+        search_results.extend(self.search("results", "".join([c for c in show['title'] if c not in set(string.punctuation)])))
+        search_results.extend(self.search("results", "".join([c for c in show['alt_title'] if c not in set(string.punctuation)])))
         _logger.debug("Found {0} results.".format(len(search_results)))
         for item in search_results:
+            print(item)
             subgroups.extend(item[0])
             results.extend(item[1])
         subgroups = list(set(subgroups))
