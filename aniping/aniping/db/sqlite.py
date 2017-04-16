@@ -31,17 +31,17 @@ class Sqlite(DataBase):
         self._schema = None
         
     @property
-    def name(self) -> str:
+    def name(self):
         """str: Returns the name of this plugin."""
         return self._name
         
     @property
-    def db_loc(self) -> str:
+    def db_loc(self):
         """str: Returns the sqlite file we use."""
         return self._db_file
         
     @property
-    def db_schema(self) -> str:
+    def db_schema(self):
         """str: Returns the contents of the schema file."""
         return self._schema
 
