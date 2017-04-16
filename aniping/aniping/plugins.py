@@ -1,6 +1,5 @@
 #/usr/bin/env python3
 import logging, os, importlib, sys
-from typing import Optional
 
 _logger = logging.getLogger(__name__)
 
