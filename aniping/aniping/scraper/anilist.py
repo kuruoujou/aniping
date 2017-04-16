@@ -35,12 +35,12 @@ class Anilist(Scraper):
         self._access_token_expiry = int(time.time())
         
     @property
-    def name(self) -> str:
+    def name(self):
         """str: Returns the name of the plugin."""
         return self._name
         
     @property
-    def url(self) -> str:
+    def url(self):
         """str: Returns the url of anilist."""
         return self._url
         

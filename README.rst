@@ -86,8 +86,7 @@ still, such as:
 - Improve debug logging
 - Improve documentation with Sphinx and RTD, or maybe GH-Pages
 - Create a test framework (nose?) and implement a CI process using travis
-- Modularize the aniping module, so that sonarr and anilist and other pieces can
-  be swapped out with simple config file changes
+- Build more plugins for different services!
 
 So if you want to help out, please do! If you find a bug or something, please go
 ahead and make an issue, or if you want to jump in and make a PR, there's nothing

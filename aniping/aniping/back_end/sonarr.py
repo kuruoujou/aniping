@@ -31,22 +31,22 @@ class Sonarr(BackEnd):
         self._tag_prefix = "ap:"
     
     @property 
-    def name(self) -> str:
+    def name(self):
         """str: Returns the plugin's name."""
         return self._name
     
     @property 
-    def url(self) -> str:
+    def url(self):
         """str: Returns the configured url of the sonarr instance."""
         return self._url
     
     @property
-    def api_key(self) -> str:
+    def api_key(self):
         """str: Returns the configured sonarr api key."""
         return self._api_key
         
     @property
-    def _login_type(self) -> str:
+    def _login_type(self):
         """str: Returns "basic" or "form", depending on what sort of logons sonarr requires. None if neither."""
         _logger.debug("Checking if sonarr requires logins.")
         out = requests.get(self.url)

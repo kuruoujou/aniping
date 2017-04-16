@@ -64,22 +64,22 @@ class Nyaa(SearchEngine):
         self._url = "https://www.nyaa.se/?page=rss&cats={0}&filter={1}".format(self._category, self._filter)
         
     @property 
-    def name(self) -> str:
+    def name(self):
         """str. Returns the name of the plugin."""
         return self._name
     
     @property 
-    def url(self) -> str:
+    def url(self):
         """str. Returns the RSS url we are parsing from."""
         return self._url
         
     @property
-    def category(self) -> str:
+    def category(self):
         """str. Returns the category ID we are looking at in Nyaa."""
         return self._category
         
     @property
-    def filter(self) -> int:
+    def filter(self):
         """int. Returns the filter ID we are looking at in nyaa."""
         return self._filter
         

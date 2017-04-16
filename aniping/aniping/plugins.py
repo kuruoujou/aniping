@@ -36,12 +36,12 @@ class AniPluginManager(object):
         _logger.debug("Initialized!")
         
     @property
-    def available_plugins(self) -> dict:
+    def available_plugins(self):
         """dict: Dictionary of available plugins, keyed by plugin type."""
         return self._available_plugins
         
     @property
-    def loaded_plugins(self) -> dict:
+    def loaded_plugins(self):
         """dict: Dictionary of loaded plugin classes, keyed by plugin type."""
         out={}
         for cat,clses in self._loaded_plugins.items():
@@ -51,7 +51,7 @@ class AniPluginManager(object):
         return out
         
     @property
-    def plugin_categories(self) -> list:
+    def plugin_categories(self):
         """dict: Plugin categories that key available and loaded plugins."""
         return list(CATEGORIES.keys())
         
@@ -176,7 +176,7 @@ class AniPlugin(object):
         self.apm = plugin_manager
         
     @property
-    def name(self) -> Optional[str]:
+    def name(self):
         """str: Should return the name of your plugin, but is optional."""
         return None
         
@@ -261,7 +261,7 @@ class SearchEngine(AniPlugin):
         is needed with search engine plugins.
     """
     @property
-    def url(self) -> str:
+    def url(self):
         """str: Should return the URL of your search engine."""
         return None
                
@@ -300,7 +300,7 @@ class Scraper(AniPlugin):
         is needed with search engine plugins.
     """
     @property
-    def url(self) -> str:
+    def url(self):
         """str: Should return the URL of your scraper."""
         return None
         
@@ -368,12 +368,12 @@ class DataBase(AniPlugin):
         is needed with search engine plugins.
     """
     @property
-    def db_loc(self) -> Optional[str]:
+    def db_loc(self):
         """str: the location of your database. Can be a url or a filename, or anything else really."""
         return None
         
     @property
-    def db_schema(self) -> Optional[str]:
+    def db_schema(self):
         """str: The database's schema. Can be read from an external file or simply added here."""
         return None
         
@@ -633,22 +633,22 @@ class BackEnd(AniPlugin):
         is needed with search engine plugins.
     """
     @property
-    def url(self) -> str:
+    def url(self):
         """str: Should return the URL of your search engine."""
         return None
     
     @property
-    def api_key(self) -> Optional[str]:
+    def api_key(self):
         """str: Should return the the API key of your backend, if it needs one."""
         return None
         
     @property
-    def username(self) -> Optional[str]:
+    def username(self):
         """str: Should return the username used to log into your backend if there is no api key."""
         return None
         
     @property
-    def password(self) -> Optional[str]:
+    def password(self):
         """str: Should return the password used to log into your backend if there is no api key."""
         return None
         
