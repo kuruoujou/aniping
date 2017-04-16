@@ -282,7 +282,11 @@ class FrontEnd(AniPlugin):
             str. A link to some fanart.
         """
         _logger.debug("Getting first result from backend fanart function.")
-        return self.back_end("fanart", beid)[0]
+        fanart = self.back_end("fanart", beid)
+        if len(fanart) > 0:
+            return fanart[0]
+        else:
+            return None
         
     def add_update_show(self, dbid, beid, subgroup):
         """Adds a given show to the backend, or edits it if its already there.

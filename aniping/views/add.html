@@ -1,8 +1,10 @@
 {% extends "layout.html" %}
 {% block style %}
+{% if fanart != None %}
 .addpage:before{
 	        background: linear-gradient(rgba(255, 255, 255, 0.50), rgba(255, 255, 255, 0.50)), url({{fanart}});
     	}
+{% endif %}
 {% endblock style %}
 
 {% block bodyclass %}
