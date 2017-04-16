@@ -42,19 +42,31 @@ Configuration
 Setup a config.yml in your configuration directory (by default aniping/config)
 that looks like the following, changing your values as appropriate::
 
-    LIBRARY_PATH: /path/to/sonarrs/library
-    SONARR:
-        URL: https://my.sonarr.url
-        API_KEY: my-sonarr-api-key
-        QUALITY_PROFILE: HD - 720p/1080p
-    ANILIST:
-        CLIENT_ID: anilist_client_id
-        CLIENT_SECRET: anilist_client_secret
-    SECRET_KEY: this is a totally random string and can be whatever you want
-    IMAGE_CACHE: static/images/cache
+		SONARR:
+			URL: https://my.sonarr.url
+			API_KEY: my-sonarr-api-key
+			QUALITY_PROFILE: HD - 720p/1080p
+			LIBRARY_PATH: /path/to/sonarrs/library
+		NYAA:
+			FILTER: A+ Only
+			CATEGORY: Anime - English-translated
+		ANILIST:
+			CLIENT_ID: anilist_client_id
+			CLIENT_SECRET: anilist_client_secret
+		SQLITE:
+			FILE: db/aniping.sqlite
+			SCHEMA: schema.ddl
+		BACK_END: Sonarr
+		DATABASE: Sqlite
+		SEARCH:
+			- Nyaa
+		SCRAPER:
+			- Anilist
+		SECRET_KEY: this is a totally random string and can be whatever you want
+		IMAGE_CACHE: static/images/cache
     
-Change the values above with the appropriate items. Do not change the ``IMAGE_CACHE``
-value unless you know what you are doing! 
+Change the values above with the appropriate items. Do not change the ``IMAGE_CACHE`` or the ``SQLITE``->``SCHEMA``
+values unless you know what you are doing! 
 
 For instructions on getting your sonarr API key, check `the Sonarr docs 
 <https://github.com/Sonarr/Sonarr/wiki/API#api-key>`_, and for instructions on 

@@ -26,14 +26,15 @@ If you just want to get going, head over to the :ref:`quick-start` to get up and
    quick-start
    usage
 ..
-
-
-.. automodule:: aniping
-
+.. toctree::
+   :maxdepth: 2
+   :caption: Developers Guide:
+   
+   plugins
+   
+..
 
 Indices and tables
 ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+* :ref:`API reference <modindex>`

@@ -20,6 +20,9 @@ create table airing_anime_list (
 	-- Alt_title:	 		title when translated into english preferably, alternative titles otherwise.
 	alt_title				text,
 	
+	-- Synonyms:			A Pipe (|) seperated list of synonyms for the show.
+	synonyms				text,
+	
 	-- Total_episodes: 		Total number of episodes for the show.
 	total_episodes			integer,
 	
@@ -80,13 +83,13 @@ create virtual table show_search using fts4(
 -- Trigger to create items in FTS DB when created in DB
 create trigger add_to_search after insert on airing_anime_list
 begin
-	insert into show_search (id, search_data) values (new.id, ifnull(new.title,'') || ' ' || ifnull(new.type,'') || ' ' || ifnull(new.alt_title,'') || ' ' || ifnull(new.genre,'') || ' ' || ifnull(new.studio,'') || ' ' || ifnull(new.description,'') || ' ' || ifnull(new.link,''));
+	insert into show_search (id, search_data) values (new.id, ifnull(new.title,'') || ' ' || ifnull(new.type,'') || ' ' || ifnull(new.alt_title,'') || ' ' || ifnull(new.synonyms,'') || ' ' || ifnull(new.genre,'') || ' ' || ifnull(new.studio,'') || ' ' || ifnull(new.description,'') || ' ' || ifnull(new.link,''));
 end;
 
 -- Trigger to update items in FTS DB when modified in DB
 create trigger modify_search after update on airing_anime_list
 begin
-	update show_search set search_data=ifnull(new.title,'') || ' ' || ifnull(new.type,'') || ' ' || ifnull(new.alt_title,'') || ' ' || ifnull(new.genre,'') || ' ' || ifnull(new.studio,'') || ' ' || ifnull(new.description,'') || ' ' || ifnull(new.link,''), id=new.id where id=old.id;
+	update show_search set search_data=ifnull(new.title,'') || ' ' || ifnull(new.type,'') || ' ' || ifnull(new.alt_title,'') || ' ' || ifnull(new.synonyms,'') || ' ' || ifnull(new.genre,'') || ' ' || ifnull(new.studio,'') || ' ' || ifnull(new.description,'') || ' ' || ifnull(new.link,''), id=new.id where id=old.id;
 end;
 
 -- Trigger to delete items in FTS DB when deleted in DB
