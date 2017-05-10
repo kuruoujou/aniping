@@ -47,9 +47,10 @@ that looks like the following, changing your values as appropriate::
 			API_KEY: my-sonarr-api-key
 			QUALITY_PROFILE: HD - 720p/1080p
 			LIBRARY_PATH: /path/to/sonarrs/library
-		NYAA:
-			FILTER: A+ Only
-			CATEGORY: Anime - English-translated
+		RSS:
+			URL:
+				- https://www.tokyotosho.info/rss.php
+				- http://horriblesubs.info/rss.php?res=all
 		ANILIST:
 			CLIENT_ID: anilist_client_id
 			CLIENT_SECRET: anilist_client_secret
@@ -59,7 +60,7 @@ that looks like the following, changing your values as appropriate::
 		BACK_END: Sonarr
 		DATABASE: Sqlite
 		SEARCH:
-			- Nyaa
+			- Rss
 		SCRAPER:
 			- Anilist
 		SECRET_KEY: this is a totally random string and can be whatever you want

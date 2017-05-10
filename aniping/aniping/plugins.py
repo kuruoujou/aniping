@@ -63,12 +63,16 @@ class AniPluginManager(object):
         Returns:
             The available plugins dictionary.
         """
+        _logger.debug("Scanning for plugins.")
         for category,info in CATEGORIES.items():
+            _logger.debug("Scanning category {0}".format(category))
             for module in os.listdir(os.path.join(os.path.dirname(__file__),info["directory"])):
                 if module == "__init__.py" or module[-3:] != ".py":
                     continue
+                _logger.debug("\tFound plugin {0}".format(module[:-3]))
                 importlib.import_module("aniping.{0}.{1}".format(info["directory"], module[:-3]))
                 self._available_plugins[category].append(module[:-3])
+        _logger.debug("All available plugins found.")
         return self._available_plugins
         
     def load_plugins(self):
@@ -80,10 +84,14 @@ class AniPluginManager(object):
         Returns:
             The loaded plugins dictionary.
         """
+        _logger.debug("Loading plugins.")
         for category,catinfo in CATEGORIES.items():
+            _logger.debug("Loading in category {0}".format(category))
             if catinfo["config"] in self._config:
                 plugins_to_load = self._config[catinfo["config"]] if isinstance(self._config[catinfo["config"]], list) else [self._config[catinfo["config"]]]
+                _logger.debug("Need to load the following plugins: {0}".format(plugins_to_load))
                 for cls in eval(catinfo["class"]).__subclasses__():
+                    _logger.debug("\tchecking class {0}".format(cls.__name__))
                     if not any(isinstance(x, cls) for x in self._loaded_plugins[category]):
                         if catinfo["multiload"] and cls.__name__ in plugins_to_load:
                             self._loaded_plugins[category].append(cls(self._config, self))

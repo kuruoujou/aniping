@@ -9,7 +9,7 @@ Aniping is self-hosted, so you don't have to store your data in a random server
 somewhere, unless you want to. It doesn't even store a user account, instead it uses
 Sonarr's account system to handle useres, with no special configuration required.
 
-It uses the power of nyaa to determine who is subtiltling a show for you, to make it easy
+It uses the power of indexers to determine who is subtiltling a show for you, to make it easy
 to decide which group to watch. You can even highlight shows if you don't want to start
 watching them just yet, to make them easier to find later.
 
