@@ -36,7 +36,7 @@ fe = front_end.FrontEnd(app.config)
 
 scheduler = BackgroundScheduler()
 """BackgroundScheduler(): APScheduler instance to schedule occasional tasks"""
-scheduler.add_job(fe.scrape_shows, "interval", days=7)
+scheduler.add_job(fe.scrape_shows, "interval", hours=12)
 scheduler.start()
 
 @app.route('/search')
