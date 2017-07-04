@@ -41,7 +41,7 @@ CATEGORY_MAP = {
 class Nyaa(SearchEngine):
     """Nyaa Search Engine Plugin.
     
-    This plugin implements the nyaa.se search engine for finding shows
+    This plugin implements the nyaa.si search engine for finding shows
     and subgroups.
     """
     def __init__(self, config, plugin_manager):
@@ -55,13 +55,13 @@ class Nyaa(SearchEngine):
         self.__name__       = "Nyaa Torrents"
         self.__id__         = "nyaa"
         self.__author__     = "Spencer Julian <hellothere@spencerjulian.com>"
-        self.__version__    = "0.01"
+        self.__version__    = "0.02"
         
         self.config = self._config['NYAA']
         self._name = self.config['NAME'] if 'NAME' in self.config else 'Nyaa Torrents'
         self._filter = FILTER_MAP[self.config['FILTER'].lower()] if 'FILTER' in self.config else 0
         self._category = CATEGORY_MAP[self.config['CATEGORY'].lower()] if 'CATEGORY' in self.config else "0_0"
-        self._url = "https://www.nyaa.se/?page=rss&cats={0}&filter={1}".format(self._category, self._filter)
+        self._url = "https://www.nyaa.si/?page=rss&cats={0}&filter={1}".format(self._category, self._filter)
         
     @property 
     def name(self):
