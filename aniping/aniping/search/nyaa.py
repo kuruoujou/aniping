@@ -7,35 +7,34 @@ log = logging.getLogger(__name__)
 
 FILTER_MAP = {
     "show all":         0,
-    "filter remakes":   1,
-    "trusted only":     2,
-    "a+ only":          3
+    "no remakes":       1,
+    "trusted only":     2
     }
 CATEGORY_MAP = {
     "all categories":                       "0_0",
     "anime":                                "1_0",
-    "anime - anime music video":            "1_32",
-    "anime - english-translated":           "1_37",
-    "anime - non-english-translated":       "1_38",
-    "anime - raw":                          "1_11",
-    "audio":                                "3_0",
-    "audio - lossless":                     "3_14",
-    "audio - lossy":                        "3_15",
-    "literature":                           "2_0",
-    "literature - english-translated":      "2_12",
-    "literature - non-english-translated":  "2_39",
-    "literature - raw":                     "2_13",
-    "live action":                          "5_0",
-    "live action - english-translated":     "5_19",
-    "live action = idol/promotion video":   "5_22",
-    "live action - non-english-translated": "5_21",
-    "live_action - raw":                    "5_20",
-    "pictures":                             "4_0",
-    "picutres - graphics":                  "4_18",
-    "pictures - photos":                    "4_17",
+    "anime - anime music video":            "1_1",
+    "anime - english-translated":           "1_2",
+    "anime - non-english-translated":       "1_3",
+    "anime - raw":                          "1_4",
+    "audio":                                "2_0",
+    "audio - lossless":                     "2_1",
+    "audio - lossy":                        "2_2",
+    "literature":                           "3_0",
+    "literature - english-translated":      "3_1",
+    "literature - non-english-translated":  "3_2",
+    "literature - raw":                     "3_3",
+    "live action":                          "4_0",
+    "live action - english-translated":     "4_1",
+    "live action = idol/promotion video":   "4_2",
+    "live action - non-english-translated": "4_3",
+    "live_action - raw":                    "4_4",
+    "pictures":                             "5_0",
+    "picutres - graphics":                  "5_1",
+    "pictures - photos":                    "5_2",
     "software":                             "6_0",
-    "software - applications":              "6_23",
-    "software - games":                     "6_24"
+    "software - applications":              "6_1",
+    "software - games":                     "6_2"
     }  
 
 class Nyaa(SearchEngine):

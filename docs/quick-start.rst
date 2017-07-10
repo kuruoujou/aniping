@@ -41,7 +41,7 @@ Now that you've got the docker container running, you'll need to make a config f
 			QUALITY_PROFILE: HD - 720p/1080p
 			LIBRARY_PATH: /path/to/sonarrs/library
 		NYAA:
-			FILTER: A+ Only
+			FILTER: Trusted Only
 			CATEGORY: Anime - English-translated
 		ANILIST:
 			CLIENT_ID: anilist_client_id
