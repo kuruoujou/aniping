@@ -245,6 +245,9 @@ class FrontEnd(AniPlugin):
         search_results.extend(self.search("results", "".join([c for c in show['alt_title'] if not c.isdigit()])))
         search_results.extend(self.search("results", "".join([c for c in show['title'] if c not in set(string.punctuation)])))
         search_results.extend(self.search("results", "".join([c for c in show['alt_title'] if c not in set(string.punctuation)])))
+        translator = str.maketrans(string.punctuation, ' '*len(string.punctuation))
+        search_results.extend(self.search("results", show['title'].translate(translator)))
+        search_results.extend(self.search("results", show['alt_title'].translate(translator)))
         _logger.debug("Found {0} results.".format(len(search_results)))
         for item in search_results:
             print(item)
