@@ -122,7 +122,7 @@ class AniPluginManager(object):
             else:
                 output = []
                 output.append(getattr(cls,func)(*args, **kwargs))
-                return output
+        return output
     
     def plugin_function(self, plugin, func, *args, **kwargs):
         """Call a specific plugin's function.
