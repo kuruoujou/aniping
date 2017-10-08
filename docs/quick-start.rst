@@ -40,6 +40,7 @@ Now that you've got the docker container running, you'll need to make a config f
 			API_KEY: my-sonarr-api-key
 			QUALITY_PROFILE: HD - 720p/1080p
 			LIBRARY_PATH: /path/to/sonarrs/library
+            DELETE_SHOWS: False
 		NYAA:
 			FILTER: Trusted Only
 			CATEGORY: Anime - English-translated

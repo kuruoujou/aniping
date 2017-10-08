@@ -27,6 +27,7 @@ class Sonarr(BackEnd):
         self._url = self.config['URL']
         self._api_key = self.config['API_KEY']
         self._library_path = self.config['LIBRARY_PATH']
+        self._delete_shows = self.config['DELETE_SHOWS'] if 'DELETE_SHOWS' in self.config else False
         self._quality_profile = self._quality_profile_selected(self.config['QUALITY_PROFILE'])
         self._tag_prefix = "ap:"
     
@@ -200,17 +201,20 @@ class Sonarr(BackEnd):
         """Remove a given show from sonarr.
 
         It will not delete files. The backend ID we're given is not the ID we need, so the show
-        is looked up first.
+        is looked up first. It will only delete shows if the DELETE_SHOWS config value is set.
         
         Args:
             beid (int): The TVDB ID of the show.
         """
         _logger.debug("Entering remove_show. Getting all shows being watched from sonarr.")
-        shows = self.get_watching_shows()
-        _logger.debug("Got all shows. Attempting to find show with ID {0}".format(beid))
-        show = [x for x in shows if x['beid'] == beid][0]
-        _logger.debug("Found show {0}. Deleting.".format(show['title']))
-        requests.delete("{0}/api/series/{1}?apikey={2}".format(self.url, show['id'], self.api_key))
+        if self._delete_shows:
+            _logger.debug("Config line set to delete shows from sonarr. Continuing.")
+            shows = self.get_watching_shows()
+            _logger.debug("Got all shows. Attempting to find show with ID {0}".format(beid))
+            show = [x for x in shows if x['beid'] == beid][0]
+            _logger.debug("Found show {0}. Deleting.".format(show['title']))
+            requests.delete("{0}/api/series/{1}?apikey={2}".format(self.url, show['id'], self.api_key))
+        _logger.debug("Config line set to leave shows in sonarr, exiting with no changes.")
         
     def subgroup_selected(self, beid):
         """Uses results from search to determine which subgroup is selected.

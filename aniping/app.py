@@ -202,5 +202,31 @@ def update_show():
     log.debug("User cannot be authenticated, send 404 to hide page.")
     abort(404)
 
+@app.route('/scan', methods=['GET'])
+def scan_scrapers():
+    """On demand scrapper scanning handler.
+
+    For some reason the scheduler doesn't always work, this endpoint allows for
+    instant scanning, assuming it's not already occurring. The function is aborted
+    with a ``404`` message to hide the page if the user is not authenticated.
+
+    Scanning can take a long time - 20 to 30 minutes - so it's recommended this
+    endpoint be called asynchronously.
+
+    Returns:
+       JSON formatted output to identify that scanning has completed or is already
+       ongoing.
+    """
+    log.debug("Entering scan_scrapers.")
+    if fe.check_login_id(escape(session['logged_in'])):
+        log.debug("User is logged in, attempting to begin scan.")
+        if not fe.scrape_shows():
+            log.debug("scrape_shows returned false, either the lockfile exists incorrectly or scraping is ongoing.")
+            return jsonify({"scan":"failure", "reason":"A scan is ongoing"})
+        log.debug("scrape_shows just returned. Returning success.")
+        return jsonify({"scan":"success"})
+    log.debug("User cannot be authenticated, send 404 to hide page.")
+    abort(404)
+
 if __name__=="__main__":
     app.run(host="0.0.0.0",port=8081,debug=True)

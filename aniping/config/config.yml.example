@@ -3,6 +3,7 @@ SONARR:
     API_KEY: my-sonarr-api-key
     QUALITY_PROFILE: HD - 720p/1080p
     LIBRARY_PATH: /path/to/sonarrs/library
+    DELETE_SHOWS: False
 RSS:
     URL:
         - https://www.tokyotosho.info/rss.php
