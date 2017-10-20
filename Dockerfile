@@ -16,6 +16,8 @@ RUN apk add --no-cache --update nginx supervisor python3-dev build-base \
     cp /tmp/docker-config/nginx-default.conf /etc/nginx/conf.d/default.conf && \
     cp /tmp/docker-config/uwsgi.ini /etc/uwsgi/apps-enabled/uwsgi.ini && \
     cp /tmp/docker-config/supervisord.conf /etc/supervisor/supervisord.conf && \
+    mkdir -p /app/db && \
+    mkdir -p /app/static/images/cache && \
     chown -R nginx:www-data /app
 
 VOLUME ["/app/config", "/app/db", "/app/static/images/cache"]
