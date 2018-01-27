@@ -763,7 +763,8 @@ class BackEnd(AniPlugin):
         
         As all aniping ever really deals with in the backend is the subgroup, that is all
         that should be expected in this method. Additionally, this method should be capable of
-        both adding and editing a show.
+        both adding and editing a show. Ideally, it should also initiate a search and attempt
+        to download anything new once a show has been added or edited.
         
         Args:
             beid (int): The backend ID of the show we're adding or editing.

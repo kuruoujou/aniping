@@ -158,9 +158,26 @@ class Sonarr(BackEnd):
             show['beid'] = show['tvdbId']
         _logger.debug("Found {0} shows. Returning the list.".format(len(shows)))
         return shows
+
+    def _update_sonarr(self, series_id, season_id):
+        """Calls for sonarr to search for all episodes of a given season
+        of a given series.
+
+        Args:
+            series_id (int): The _Sonarr_ ID of the show we're updating.
+            season_id (int): The season number we're updating.
+        """
+        _logger.debug("Entering _update_sonarr.")
+        _logger.debug("Attempting to update series ID {0} season {1}".format(series_id, season_id))
+        payload = {
+            "name": "SeasonSearch",
+            "seriesId": series_id,
+            "seasonNumber": season_id
+        }
+        requests.post("{0}/api/command?apikey={1}".format(self.url, self.api_key), json=payload)
         
     def add_update_show(self, beid, subgroup):
-        """Adds or edits a show in sonarr.
+        """Adds or edits a show in sonarr, then calls for a scan.
         
         Args:
             beid (int): The TVDB ID of the show we're adding or editing.
@@ -195,7 +212,12 @@ class Sonarr(BackEnd):
             out = requests.post("{0}/api/series?apikey={1}".format(self.url, self.api_key), json=payload)
         else:
             show['tags'] = [tag]
-            requests.put("{0}/api/series?apikey={1}".format(self.url, self.api_key), json=show)
+            out = requests.put("{0}/api/series?apikey={1}".format(self.url, self.api_key), json=show)
+
+        out_json = out.json()
+        # Kinda hacky, but post doesn't provide us with a seasonCount like Put does.
+        season_count = max([x["seasonNumber"] for x in out_json["seasons"]])
+        self._update_sonarr(out_json['id'], season_count)
         
     def remove_show(self, beid):
         """Remove a given show from sonarr.
