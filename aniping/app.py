@@ -192,7 +192,9 @@ def update_show():
                 log.debug("Could not find show from backend with ID {0}".format(id))
                 abort(404)
             db_show = fe.get_show_from_db(id)
-            subgroups = fe.get_subgroups(id)
+            subgroups = []
+            if db_show["sub_groups"]:
+                subgroups = db_show["sub_groups"].split("|")
             selected_group = fe.get_selected_group(sonarr_show['beid'])
             fanart = fe.get_fanart(sonarr_show['beid'])
             log.debug("Rendering form for user")
@@ -201,6 +203,32 @@ def update_show():
         return redirect('/')
     log.debug("User cannot be authenticated, send 404 to hide page.")
     abort(404)
+
+@app.route('/update', methods=['GET'])
+def update_groups():
+    """On demand group gathering handler.
+
+    Because groups are only updated once every 12 hours instead of on demand, this
+    endpoint can trigger an update for a particular show or all shows asynchronously
+    at any time. If ``id`` is passed, will only update for that show, otherwise will
+    update for all shows. If the user is unauthenticated, the function is aborted
+    with a ``404``.
+
+    Returns:
+        JSON formatted output containing a list of subgroups if ``id`` is passed,
+        otherwise JSON formatted output to indicate scanning is completed or ongoing.
+    """
+    log.debug("Entering update_groups.")
+    if fe.check_login_id(escape(session['logged_in'])):
+        log.debug("User is logged in, attempting to gather groups.")
+        if 'id' in request.args:
+            subgroups = fe.get_subgroups(request.args['id'])
+            return jsonify({"subgroups":subgroups})
+        fe.get_all_subgroups()
+        return jsonify({"complete": true})
+    log.debug("User cannot be authenticated, send 404 to hide page.")
+    abort(404)
+
 
 @app.route('/scan', methods=['GET'])
 def scan_scrapers():

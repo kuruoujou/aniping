@@ -465,7 +465,7 @@ class DataBase(AniPlugin):
     def change_show(self, id=None, aid=None, beid=None, show_type=None, title=None, alt_title=None, 
                 synonyms=None, total_episodes=None, next_episode=None, next_episode_date=None, start_date=None, 
                 genre=None, studio=None, description=None, link=None, image=None, airing=None, 
-                season_name=None, starred=None):
+                season_name=None, starred=None, sub_groups=None):
         """Modifies a show in the database.
         
         One of id, aid, or beid is required to look up the show, but all other arguments are optional. If multiple of 
@@ -502,6 +502,7 @@ class DataBase(AniPlugin):
             airing (str): The airing status of the show.
             season_name (str): The season string of the show (winter, spring, summer, fall)
             starred (int): The highlight status of the show. 1=True, 0=False.
+            sub_groups (str): A pipe-separated (|) list of subgroups running the show.
         """
         raise NotImplementedError()
         
@@ -533,6 +534,7 @@ class DataBase(AniPlugin):
                 * ``airing``:           The airing status of the show according to the scraper (str)
                 * ``season_name``:      The name of the season: winter, spring, summer, or fall (str)
                 * ``starred``:          Whether the show is highlighted or not (int)
+                * ``sub_groups``:       A pipe-separated (|) list of subgroups running the show (str)
         """
         raise NotImplementedError()
         
@@ -570,6 +572,7 @@ class DataBase(AniPlugin):
                 * ``airing``:           The airing status of the show according to the scraper (str)
                 * ``season_name``:      The name of the season: winter, spring, summer, or fall (str)
                 * ``starred``:          Whether the show is highlighted or not (int)
+                * ``sub_groups``:       A pipe-separated (|) list of subgroups running the show (str)
         """
         raise NotImplementedError()
         
@@ -620,6 +623,21 @@ class DataBase(AniPlugin):
                 * ``airing``:           The airing status of the show according to the scraper (str)
                 * ``season_name``:      The name of the season: winter, spring, summer, or fall (str)
                 * ``starred``:          Whether the show is highlighted or not (int)
+                * ``sub_groups``:       A pipe-separated (|) list of subgroups running the show (str)
+        """
+        raise NotImplementedError()
+
+    def check_for_update(self):
+        """Check for update to database.
+
+        Occasionally aniping will need to make a change that involves updating the
+        way the database is configured - adding or removing columns and the like.
+        There should be a version field in your database somewhere that you can
+        check against, and this function should check if an update is needed.
+
+        If an update is needed, this function should also migrate the database forward,
+        or, in the unlikely event this requires user iteraction or data loss, error
+        out and notify the user in the logs.
         """
         raise NotImplementedError()
         

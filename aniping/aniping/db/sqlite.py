@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os,sys,sqlite3,time,logging
+import os,sys,sqlite3,time,logging,shutil
 from aniping.plugins import DataBase
 
 log = logging.getLogger(__name__)
@@ -21,6 +21,9 @@ class Sqlite(DataBase):
         self.__id__         = "sqlite"
         self.__author__     = "Spencer Julian <hellothere@spencerjulian.com>"
         self.__version__    = "0.01"
+
+        # Only change this when updating the schema!
+        self.__db_version__ = 1
         
         self.config = self._config['SQLITE']
         self._name = self.config['NAME'] if 'NAME' in self.config else 'Sqlite'
@@ -106,6 +109,7 @@ class Sqlite(DataBase):
         with open(self._schema_file, 'rt') as f:
             self._schema = f.read()
         self._conn.executescript(self._schema)
+        self._conn.execute("PRAGMA user_version = {0}".format(self.__db_version__))
         self._commit_changes()
 
 
@@ -176,6 +180,7 @@ class Sqlite(DataBase):
                 * ``airing``:           The airing status of the show according to the scraper (str)
                 * ``season_name``:      The name of the season: winter, spring, summer, or fall (str)
                 * ``starred``:          Whether the show is highlighted or not (int)
+                * ``sub_groups``:       A pip-separated (|) list of subgroups running the show (str)
         """
         log.debug("Attempting to get all shows.")
         log.debug("Executing select statement.")
@@ -239,6 +244,7 @@ class Sqlite(DataBase):
                 * ``airing``:           The airing status of the show according to the scraper (str)
                 * ``season_name``:      The name of the season: winter, spring, summer, or fall (str)
                 * ``starred``:          Whether the show is highlighted or not (int)
+                * ``sub_groups``:       A pip-separated (|) list of subgroups running the show (str)
         """
         # Must be a list of tuples to preserve order. Prefer DB ID over Scraper ID over Backend ID
         ids = [('id', id), ('aid', aid), ('beid', beid)]
@@ -288,7 +294,7 @@ class Sqlite(DataBase):
     def change_show(self, id=None, aid=None, beid=None, show_type=None, title=None, alt_title=None, 
             synonyms=None, total_episodes=None, next_episode=None, next_episode_date=None, start_date=None, 
             genre=None, studio=None, description=None, link=None, image=None, airing=None, 
-            season_name=None, starred=None):
+            season_name=None, starred=None, sub_groups=None):
         """Modifies a show in the database. 
         
         One of id, aid, or beid is required.
@@ -326,6 +332,7 @@ class Sqlite(DataBase):
             airing (str): The airing status of the show.
             season_name (str): The season string of the show (winter, spring, summer, fall)
             starred (int): The highlight status of the show. 1=True, 0=False.
+            sub_groups (str): A pipe-separated (|) list of subgroups running the show.
         """
         if not id and not aid and not beid:
             raise
@@ -350,7 +357,8 @@ class Sqlite(DataBase):
             ("image", image),
             ("airing", airing),
             ("season_name", season_name),
-            ("starred", starred)
+            ("starred", starred),
+            ("sub_groups", sub_groups)
             ]
         for item in ids:
             if item[0] != where_clause[0]:
@@ -400,9 +408,70 @@ class Sqlite(DataBase):
                 * ``airing``:           The airing status of the show according to the scraper (str)
                 * ``season_name``:      The name of the season: winter, spring, summer, or fall (str)
                 * ``starred``:          Whether the show is highlighted or not (int)
+                * ``sub_groups``:       A pip-separated (|) list of subgroups running the show (str)
         """
         cur = self._conn.execute('''select * from airing_anime_list where id in 
                         (select id from show_search where search_data match ?);''', (term,))
         output = cur.fetchall()
         output = [dict(x) for x in output]
         return output
+
+    @_read
+    def check_for_update(self):
+        """Checks if the database version is expected, and updates the db if not.
+
+        Returns:
+            Bool. True if up to date -or- if update successful, False otherwise.
+        """
+        cur = self._conn.execute("PRAGMA user_version;")
+        db_version = int(cur.fetchone()[0])
+        if db_version < self.__db_version__:
+            update = self._perform_update(db_version)
+            return update
+        return True
+
+
+    @_write
+    def _perform_update(self, version):
+        """Performs the actual update if check_for_update determines we're out of date.
+
+        Returns:
+            Bool. True if successful, False if not.
+        """
+        # BACKUP THE DATABASE!!!
+        shutil.copyfile(self._db_file, "{0}.backup-{1}".format(self._db_file, time.strftime('%Y%m%d.%H%M%S')))
+        # Create a string of queries to run for each version to upgrade.
+        # We'll be given the current version, so we'll start at the next index up
+        # in the list.
+        upgrade_steps = [
+                "", # We don't upgrade from nothing to 0, so skip this one
+                """ -- VERSION 0 -> 1 UPGRADE PROCESS
+                    -- Cleanup triggers
+                    DROP TRIGGER add_to_search;
+                    DROP TRIGGER modify_search;
+                    DROP TRIGGER delete_from_search;
+                    -- Add column to airing_anime_list table
+                    ALTER TABLE airing_anime_list ADD COLUMN sub_groups text;
+                    -- re-create triggers with updated column
+                    CREATE TRIGGER add_to_search AFTER INSERT ON airing_anime_list 
+                    BEGIN
+                        INSERT INTO show_search (id, search_data) VALUES (new.id, ifnull(new.title,'') || ' ' || ifnull(new.type,'') || ' ' || ifnull(new.alt_title,'') || ' ' || ifnull(new.synonyms,'') || ' ' || ifnull(new.genre,'') || ' ' || ifnull(new.studio,'') || ' ' || ifnull(new.description,'') || ' ' || ifnull(new.link,'') || ' ' || ifnull(new.sub_groups,'')); 
+                    END;
+                    CREATE TRIGGER modify_search AFTER UPDATE ON airing_anime_list
+                    BEGIN
+                        UPDATE show_search SET search_data=ifnull(new.title,'') || ' ' || ifnull(new.type,'') || ' ' || ifnull(new.alt_title,'') || ' ' || ifnull(new.synonyms,'') || ' ' || ifnull(new.  genre,'') || ' ' || ifnull(new.studio,'') || ' ' || ifnull(new.description,'') || ' ' || ifnull(new.link,'') || ' ' || ifnull(new.sub_groups,''), id=new.id WHERE id=old.id;
+                    END;
+                    CREATE TRIGGER delete_from_search BEFORE DELETE ON airing_anime_list
+                    BEGIN
+                        DELETE FROM show_search WHERE id=old.id;
+                    END;
+                """
+                ]
+
+        # Go through all of the steps one at a time.
+        for step in upgrade_steps[version+1:]:
+            self._conn.executescript(step)
+        # For now, rely on the sqlite module to error if there's a problem, and just carry on.
+        # Can't be arsed to write a database validator right now...
+        self._conn.execute("PRAGMA user_version={0}".format(self.__db_version__))
+        return True

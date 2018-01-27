@@ -68,3 +68,33 @@ $("#form-search").on('submit', function(e){
 	
 	e.preventDefault();
 });
+
+$("#refresh_subgroups").on('click', function(e){
+	showid = $("#dbid").val();
+	select = $('select#subgroup');
+	$.ajax({
+		type: "GET",
+		url: "/update",
+		data: "id="+showid,
+		beforeSend: function() {
+			$('#refresh_subgroups').prop("disabled", true);
+			$('#refresh_subgroups').html("Updating...");
+		},
+		success: function(response){
+			select.empty();
+			$.each(response.subgroups, function(idx,item){
+				select.append($("<option></option").text(item));
+			});
+			select.prop("disabled", false);
+			$("#submit_subgroups").css("display", "inline-block");
+			$('#refresh_subgroups').prop("disabled", false);
+			$('#refresh_subgroups').html("Refresh Subgroups Again");
+		},
+		error: function(){
+			$('#refresh_subgroups').html("Failed! Try again?");
+			$('#refresh_subgroups').prop("disabled", false);
+		}
+	});
+
+	e.preventDefault();
+});

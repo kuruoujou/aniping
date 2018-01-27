@@ -6,5 +6,6 @@ env/
 *.sqlite
 *.bak
 *.sqlite-journal
+*.sqlite.backup-*
 /docs/_build/
 aniping/config/config.yml

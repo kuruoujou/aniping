@@ -57,7 +57,10 @@ create table airing_anime_list (
 	season_name				text,
 	
     -- starred: 	        Marks if we have starred this to look it up later
-    starred         	    integer not null
+    starred         	    integer not null,
+
+    -- sub_groups:          A Pipe (|) separated list of subgroups running the show.
+    sub_groups              text
 );
 
 -- Cookies table
@@ -83,13 +86,13 @@ create virtual table show_search using fts4(
 -- Trigger to create items in FTS DB when created in DB
 create trigger add_to_search after insert on airing_anime_list
 begin
-	insert into show_search (id, search_data) values (new.id, ifnull(new.title,'') || ' ' || ifnull(new.type,'') || ' ' || ifnull(new.alt_title,'') || ' ' || ifnull(new.synonyms,'') || ' ' || ifnull(new.genre,'') || ' ' || ifnull(new.studio,'') || ' ' || ifnull(new.description,'') || ' ' || ifnull(new.link,''));
+	insert into show_search (id, search_data) values (new.id, ifnull(new.title,'') || ' ' || ifnull(new.type,'') || ' ' || ifnull(new.alt_title,'') || ' ' || ifnull(new.synonyms,'') || ' ' || ifnull(new.genre,'') || ' ' || ifnull(new.studio,'') || ' ' || ifnull(new.description,'') || ' ' || ifnull(new.link,'') || ' ' || ifnull(new.sub_groups,''));
 end;
 
 -- Trigger to update items in FTS DB when modified in DB
 create trigger modify_search after update on airing_anime_list
 begin
-	update show_search set search_data=ifnull(new.title,'') || ' ' || ifnull(new.type,'') || ' ' || ifnull(new.alt_title,'') || ' ' || ifnull(new.synonyms,'') || ' ' || ifnull(new.genre,'') || ' ' || ifnull(new.studio,'') || ' ' || ifnull(new.description,'') || ' ' || ifnull(new.link,''), id=new.id where id=old.id;
+	update show_search set search_data=ifnull(new.title,'') || ' ' || ifnull(new.type,'') || ' ' || ifnull(new.alt_title,'') || ' ' || ifnull(new.synonyms,'') || ' ' || ifnull(new.genre,'') || ' ' || ifnull(new.studio,'') || ' ' || ifnull(new.description,'') || ' ' || ifnull(new.link,'') || ' ' || ifnull(new.sub_groups,''), id=new.id where id=old.id;
 end;
 
 -- Trigger to delete items in FTS DB when deleted in DB

@@ -48,6 +48,19 @@ class FrontEnd(AniPlugin):
         self.apm = AniPluginManager(self.config)
         self.apm.scan_for_plugins()
         self.apm.load_plugins()
+
+        self._check_db()
+
+    def _check_db(self):
+        """Check that the database is up to date
+
+        Call back to the database version function to make sure the database
+        doesn't need upgraded. This typically only happens when aniping is updated
+        with an new database schema.
+        """
+        _logger.debug("Calling to database check_db_version function")
+        return self.db("check_for_update")
+
         
     def check_auth(self, username, password):
         """Authentication Check Function.
@@ -147,7 +160,7 @@ class FrontEnd(AniPlugin):
         _logger.debug("Writing change to database.")
         self.db("change_show", id=dbid, starred=show['starred'])
         
-    def get_show_from_db(self, dbid):
+    def get_show_from_db(self, dbid=None):
         """Gets the show information out of the database.
         
         Just calls back to db.get_show.
@@ -158,8 +171,12 @@ class FrontEnd(AniPlugin):
         Returns:
             dict. The show information for the ID passed.
         """
-        _logger.debug("Calling to db get_show function.")
-        return self.db("get_show", id=dbid)
+        if dbid:
+            _logger.debug("Calling to db get_show function, looking up show with id {0}".format(dbid))
+            return self.db("get_show", id=dbid)
+        else:
+            _logger.debug("Calling to db get_all_shows function.")
+            return self.db("get_all_shows")
         
     def search_show_from_backend(self, dbid):
         """Gets a show from the database and searches for it in the backend system.
@@ -218,7 +235,28 @@ class FrontEnd(AniPlugin):
         _logger.debug("Calling backend get_show function.")
         return self.back_end("get_show", beid)
 
-    def get_subgroups(self, dbid):
+    def get_all_subgroups(self):
+        """Gets the subgroups for all shows from the search engine.
+
+        This should be done asynchronously after scraping all shows, to allow for
+        a quick and easy subgroup selection when trying to find a show.
+        """
+        p = Path('/tmp/.aniping-subgroup-lookup')
+        if p.is_file():
+            _logger.debug("Scrape lock file exists, exiting.")
+            return False
+        else:
+            _logger.debug("Scrape lock file does not exist, creating.")
+            p.write_text("running")
+        _logger.debug("Getting all subgroups for watching shows")
+        shows = self.get_show_from_db()
+        for show in shows:
+            self.get_subgroups(show['id'], show)
+        _logger.debug("Retrived subgroups for all watching shows, removing lock file.")
+        p.unlink()
+
+
+    def get_subgroups(self, dbid, show=None):
         """Gets a list of sub groups from the search engine. 
         
         Generally this will be a torrent search site, like nyaa. Nothing is ever downloaded
@@ -232,7 +270,8 @@ class FrontEnd(AniPlugin):
             list. A list of subgroups.
         """
         _logger.debug("Trying to get subgroups for show with db id {0}".format(dbid))
-        show = self.get_show_from_db(dbid)
+        if not show:
+            show = self.get_show_from_db(dbid)
         _logger.debug("Show is {0}".format(show['title']))
         subgroups = []
         results = []
@@ -254,6 +293,7 @@ class FrontEnd(AniPlugin):
             subgroups.extend(item[0])
             results.extend(item[1])
         subgroups = list(set(subgroups))
+        self.db("change_show", id=show['id'], sub_groups="|".join(subgroups))
         _logger.debug("Ended with {0} subgroups.".format(len(subgroups)))
         return subgroups
         
@@ -432,6 +472,8 @@ class FrontEnd(AniPlugin):
         local_apm.scan_for_plugins()
         local_apm.load_plugins()
         local_apm.plugin_category_function("scraper", "scrape_shows")
+        _logger.debug("Calling to get_all_subgroups.")
+        self.get_all_subgroups()
         _logger.debug("Show scraper complete, removing lock file.")
         p.unlink()
         _logger.debug("scraper done.")

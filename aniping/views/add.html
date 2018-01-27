@@ -46,8 +46,8 @@ class="addpage"
 								<div class="row">
 									<div class="form-group col-md-5 col-sm-12">
 									<label for="subgroup">Subtitle Group</label>
+									{% if subgroups %}
 										<select class="form-control" id="subgroup" name="subgroup">
-											<option>Select Subtitle Group...</option>
 											{% for group in subgroups %}
 												{% if group != selectedGroup %}
 													<option>{{group}}</option>
@@ -56,11 +56,17 @@ class="addpage"
 												{% endif %}
 											{% endfor %}
 										</select>
+									{% else %}
+										<select class="form-control" id="subgroup" name="subgroup" disabled>
+											<option>No subtitle groups found.</option>
+										</select>
+									{% endif %}
 									</div>
-									<div class="form-group col-md-2 col-sm-12 submit">
+									<div class="form-group col-md-4 col-sm-12 submit">
 										<input type="hidden" name="dbid" id="dbid" value="{{id}}"/>
 										<input type="hidden" name="beid" id="beid" value="{{sonarr['tvdbId']}}"/>
-										<button class="btn btn-primary" type="submit">{{action|title}} Show</button>
+										<button class="btn btn-primary" type="submit" id="submit_subgroups" {% if not subgroups %} style="display:none" {% endif %}>{{action|title}} Show</button>
+										<button class="btn btn-default" type="button" id="refresh_subgroups">Refresh Subgroups</button>
 									</div>
 								</div>
 							</div>
