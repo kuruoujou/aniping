@@ -82,7 +82,7 @@ class Sqlite(DataBase):
     def _open_database(self):
         """Opens a connection to the databse."""
         log.debug("Opening sqlite database {0}".format(self._db_file))
-        self._conn = sqlite3.connect(self._db_file)
+        self._conn = sqlite3.connect(self._db_file, check_same_thread=False)
         try:
             log.debug("Checking if database is populated.")
             self._conn.execute("select * from airing_anime_list limit 1");
